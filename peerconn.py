@@ -1,6 +1,6 @@
 from models import StreamReader, StreamWriter, datetime, ServerResponses, PeerData, Message, History, Servers, Streams, PeerSocket
 from uuid import uuid4
-from asyncio import start_server, gather, sleep as async_sleep, open_connection, create_task, CancelledError, Task, run
+from asyncio import start_server, sleep as asyncio_sleep, open_connection, create_task, CancelledError, gather
 from socket import gethostname, gethostbyname
 from typing import List
 #from pickle import dumps, loads
@@ -8,49 +8,23 @@ from logging import basicConfig, DEBUG as LOGGING_DEBUG, getLogger, Logger
 
 class PeerConn:
     _peersockets: List[PeerSocket] | None
-    _my_name: str | None
-    _async_sleep_time: float = 0.1
-    _tasks: list[Task] | None
+    _peerdata: PeerData | None
+    _SLEEP_TIME: float = 0.1
     _logger: Logger | None
+    _running: bool = False
 
-    def __init__(self, my_name:str = 'ME'):
+    def __init__(self):
         self._configure_logging()
         self._logger.info(f'Initializing {PeerConn.__name__}...')
         self._peersockets = []
-        self._my_name = my_name
+        self._peerdata = PeerData()
 
-    async def create_peer_socket(self) -> str:
+        self._running = True
+
+    async def hm_create_peer_socket(self) -> str:
         self._logger.info('Creating a new peer socket..')
         peersocket_ref = PeerSocket(
-            id= str(uuid4()),
-            servers= Servers(
-            msg_server= None,
-            file_server= None
-            ),
-            streams= Streams(
-            msg_reader= None,
-            msg_writer= None,
-            file_reader= None,
-            file_writer= None
-            ),
-            history= History(
-                messages= None,
-                new_messages= False
-            ),
-            peerdata_server= PeerData(
-                name= None,
-                local_address= None,
-                msg_port= None,
-                file_port= None
-            ),
-            peerdata_client= PeerData(
-                name= None,
-                local_address= None,
-                msg_port= None,
-                file_port= None
-            ),
-            msg_comm_connected= False,
-            file_comm_connected= False
+            id= str(uuid4())
         )
         self._peersockets.append(peersocket_ref)
 
@@ -58,20 +32,20 @@ class PeerConn:
 
         return peersocket_ref.id
     
-    async def set_peersocket(self, id: str, peerdata_server: PeerData = None, peerdata_client: PeerData = None):
-        peersocket_ref = await self.get_socket(id)
+    async def hm_set_peersocket(self, id: str, peerdata: PeerData):
+        peersocket_ref = await self.hm_get_socket(id)
         if peersocket_ref != None:
             self._logger.info(f'Setting peersocket peerdata variables: id = {peersocket_ref.id}')
-            peersocket_ref.peerdata_server = peerdata_server
-            peersocket_ref.peerdata_client = peerdata_client
+            peersocket_ref.peerdata = peerdata
             self._logger.info('Peersocket peerdata variables are set.')
     
-    async def create_client_name(self) -> str:
+    async def hm_create_client_name(self) -> str:
+        print('NAME CREATED')
         return f'Client_{len(self._peersockets)}'
 
-    async def get_client_sockets(self) -> List[PeerSocket]:
+    async def hm_get_client_sockets(self) -> List[PeerSocket]:
         self._logger.info('Queering the acting as client peer sockets.')
-        matches = [conn for conn in self._peersockets if conn.servers.msg_server == None and conn.servers.file_server == None]
+        matches = [conn for conn in self._peersockets if conn.servers == None]
         if matches:
             self._logger.info('Peer sockets found, returning the list reference.')
             return matches
@@ -79,9 +53,9 @@ class PeerConn:
             self._logger.error('Peer sockets has not been found! Returning None.')
             return None
 
-    async def get_server_sockets(self) -> List[PeerSocket]:
+    async def hm_get_server_sockets(self) -> List[PeerSocket]:
         self._logger.info('Queering the acting as server peer sockets.')
-        matches = [conn for conn in self._peersockets if conn.servers.msg_server != None and conn.servers.file_server != None]
+        matches = [conn for conn in self._peersockets if conn.servers != None]
         if matches:
             self._logger.info('Peer sockets found, returning the list reference.')
             return matches
@@ -89,7 +63,7 @@ class PeerConn:
             self._logger.error('Peer sockets has not been found! Returning None.')
             return None
         
-    async def get_active_connections(self) -> List[PeerSocket]:
+    async def hm_get_active_connections(self) -> List[PeerSocket]:
         self._logger.info('Queering the connected peer sockets.')
         matches = [conn for conn in self._peersockets if conn.msg_comm_connected and conn.file_comm_connected]
         if matches:
@@ -99,23 +73,23 @@ class PeerConn:
             self._logger.error('Peer sockets has not been found! Returning None.')
             return None
     
-    async def get_socket(self, id: str) -> PeerSocket:
+    async def hm_get_socket(self, id: str) -> PeerSocket:
         self._logger.info(f'Queering the peer sockets for: id = {id}')
         matches = [conn for conn in self._peersockets if conn.id == id]
-        if matches[0]:
+        if matches:
             self._logger.info('Peer socket found, returning the reference.')
             return matches[0]
         else:
             self._logger.error('Peer socket has not been found! Returning None.')
             return None
 
-    async def get_local_address(self) -> str:
+    async def hm_get_local_address(self) -> str:
         self._logger.info('Returning IPv4.')
         return gethostbyname(gethostname())
     
-    async def disconnect(self, id: str):
+    async def hm_disconnect(self, id: str):
         self._logger.info(f'Disconnecting peer socket: id = {id}')
-        peersocket_ref = await self.get_socket(id)
+        peersocket_ref = await self.hm_get_socket(id)
         
         if peersocket_ref != None:
             peersocket_ref.msg_comm_connected = False
@@ -138,34 +112,33 @@ class PeerConn:
             del peersocket_ref
             self._logger.info('Peer socket is disconnected and removed.')
 
-    async def listen(self, id: str):
+    async def hm_set_listener(self, id: str):
         self._logger.info(f'Listening for peer socket as server: id = {id}')
-        peersocket_ref = await self.get_socket(id)
+        peersocket_ref = await self.hm_get_socket(id)
 
         if peersocket_ref != None:
             try:
+                peersocket_ref.servers = Servers()
                 peersocket_ref.servers.msg_server = await start_server(
-                    lambda r, w: PeerConn._handle_messages_as_server(r, w, peersocket_ref),
-                    peersocket_ref.peerdata_server.local_address,
-                    peersocket_ref.peerdata_server.msg_port
+                    lambda r, w: PeerConn._server_incomming_messages(r, w, peersocket_ref),
+                    peersocket_ref.peerdata.local_address,
+                    peersocket_ref.peerdata.msg_port
                 )
 
                 self._logger.info(f'Peer socket message server started: id = {id}')
 
                 peersocket_ref.servers.file_server = await start_server(
-                    lambda r, w: PeerConn._handle_files_as_server(r, w, peersocket_ref),
-                    peersocket_ref.peerdata_server.local_address,
-                    peersocket_ref.peerdata_server.file_port
+                    lambda r, w: PeerConn._server_incomming_files(r, w, peersocket_ref),
+                    peersocket_ref.peerdata.local_address,
+                    peersocket_ref.peerdata.file_port
                 )
 
                 self._logger.info(f'Peer socket file server started: id = {id}')
 
-                await peersocket_ref.servers.msg_server.serve_forever()
-                await peersocket_ref.servers.file_server.serve_forever()
             except Exception as ex:
-                self._logger.error(f'EXCEPTION for peer socket {id}: {ex}')
+                self._logger.error(f'Exception for peer socket {id}: {ex}')
 
-    async def _handle_messages_as_server(reader: StreamReader, writer: StreamWriter, peersocket:PeerSocket):
+    async def _server_incomming_messages(reader: StreamReader, writer: StreamWriter, peersocket:PeerSocket):
                 peersocket.history.messages = []
                 peersocket.msg_comm_connected = True
                 try:
@@ -174,7 +147,7 @@ class PeerConn:
                             if data and data != b'\n':
                                 peersocket.history.messages.append(
                                     Message(
-                                        sender=peersocket.peerdata_client.name,
+                                        sender=peersocket.peerdata.name,
                                         content=data.decode("utf-8"),
                                         date_time=datetime.now(),
                                         recieved= None
@@ -183,12 +156,12 @@ class PeerConn:
                                 peersocket.history.new_messages += 1
                                 writer.write(ServerResponses.MSG.encode("utf-8"))
                                 await writer.drain()
-                            await async_sleep(PeerConn._async_sleep_time)
+                            await asyncio_sleep(PeerConn._SLEEP_TIME)
                 except CancelledError:
                     if peersocket.file_comm_connected:
                         raise
 
-    async def _handle_files_as_server(reader: StreamReader, writer: StreamWriter, peersocket:PeerSocket):
+    async def _server_incomming_files(reader: StreamReader, writer: StreamWriter, peersocket:PeerSocket):
         peersocket.file_comm_connected = True
         try:
             while peersocket.file_comm_connected:
@@ -196,7 +169,7 @@ class PeerConn:
                     if data:
                         peersocket.history.messages.append(
                             Message(
-                                sender=peersocket.peerdata_client.name,
+                                sender=peersocket.peerdata.name,
                                 content=data.decode("utf-8"),
                                 date_time=datetime.now(),
                                 recieved= None
@@ -209,50 +182,47 @@ class PeerConn:
                         print(file_data.decode())
                         writer.write(ServerResponses.MSG.encode("utf-8"))
                         await writer.drain()
-                    await async_sleep(PeerConn._async_sleep_time)
+                    await asyncio_sleep(PeerConn._SLEEP_TIME)
         except CancelledError:
             if peersocket.file_comm_connected:
                 raise
 
-    async def connect_to(self, id: str, peerdata: PeerData) -> None:
+    async def hm_connect_to(self, id: str, peerdata: PeerData) -> None:
         self._logger.info(f'Trying to connect {peerdata.local_address} via peer socket: id = {id}')
-        peersocket_ref = await self.get_socket(id)
+        peersocket_ref = await self.hm_get_socket(id)
         if peersocket_ref is not None:
             try:
-                peersocket_ref.peerdata_client = peerdata
+                peersocket_ref.peerdata = peerdata
                 peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer = await open_connection(
-                    peersocket_ref.peerdata_client.local_address,
-                    peersocket_ref.peerdata_client.msg_port
+                    peersocket_ref.peerdata.local_address,
+                    peersocket_ref.peerdata.msg_port
                 )
 
                 self._logger.info('Connected to message server.')
 
                 peersocket_ref.streams.file_reader, peersocket_ref.streams.file_writer = await open_connection(
-                    peersocket_ref.peerdata_client.local_address,
-                    peersocket_ref.peerdata_client.file_port
+                    peersocket_ref.peerdata.local_address,
+                    peersocket_ref.peerdata.file_port
                 )
 
                 self._logger.info('Connected to file server.')
 
-                create_task(PeerConn._handle_messages_as_server(peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer, peersocket_ref))
-                create_task(PeerConn._handle_files_as_server(peersocket_ref.streams.file_reader, peersocket_ref.streams.file_writer, peersocket_ref))
+                create_task(
+                    gather(
+                        PeerConn._server_incomming_messages(peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer, peersocket_ref),
+                        PeerConn._server_incomming_files(peersocket_ref.streams.file_reader, peersocket_ref.streams.file_writer, peersocket_ref)
+                    )
+                )
 
                 self._logger.info('Tasks are created.')
             except Exception as ex:
-                self._logger.error(f'EXCEPTION for peer socket {id}: {ex}')
+                self._logger.error(f'Exception for peer socket {id}: {ex}')
 
-    async def exit_async(self):
+    async def hm_exit(self):
         for peersocket in self._peersockets:
-            await self.disconnect(peersocket.id)
+            await self.hm_disconnect(peersocket.id)
         self._logger.info(f'Active peer sockets: {len(self._peersockets)}')
-        # for task in self._tasks:
-        #     task.cancel()
-        #self._tasks.clear()
-        #self._logger.info(f'Active Tasks: {len(self._tasks)}')
         self._logger.info(f'Exiting from {PeerConn.__name__}..')
-
-    def exit(self):
-        run(self.exit_async())
 
     def _configure_logging(self):
         basicConfig(
@@ -262,14 +232,3 @@ class PeerConn:
         )
         self._logger = getLogger(__name__)
         self._logger.info('Logging configured.')
-    
-    # async def main(self):
-    #     self._logger.info('Running main()..')
-
-    #     self._tasks = [
-            
-    #     ]
-    #     try:
-    #         await gather(*self._tasks)
-    #     except CancelledError:
-    #         pass

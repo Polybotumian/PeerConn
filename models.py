@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from asyncio import AbstractServer
 from asyncio.streams import StreamReader, StreamWriter
 from datetime import datetime
+from typing import List
 
 class ServerResponses:
     MSG: str = 'M3554G3_R3513V3D'
@@ -11,47 +12,46 @@ class ServerResponses:
 # Data class to store peer connection details
 @dataclass
 class PeerData:
-    name: str | None
-    local_address: str | None
-    msg_port: int | None
-    file_port: int | None
+    name: str | None = None
+    local_address: str | None = None
+    msg_port: int | None = None
+    file_port: int | None = None
 
 # Data class to represent individual messages
 @dataclass
 class Message:
-    sender: str | None          # Name of the sender
-    content: str | None         # Content of the message
-    date_time: datetime | None  # Indicates when the message was sent/received
-    recieved: bool | None
+    sender: str | None = 'Sender'          # Name of the sender
+    content: str | None = 'None'         # Content of the message
+    date_time: datetime | None = None  # Indicates when the message was sent/received
+    recieved: bool = False
 
 # Data class to manage message history
 @dataclass
 class History:
-    messages: list[Message] | None  # List of messages
-    new_messages: int               # Number of undisplayed messages
+    messages: List[Message] | None = field(default_factory=list)  # List of messages
+    new_messages: int = 0                                         # Number of undisplayed messages
 
 # Data class to store references to servers
 @dataclass
 class Servers:
-    msg_server: AbstractServer | None  # Reference to the server for handling messages
-    file_server: AbstractServer | None # Reference to the server for handling files
+    msg_server: AbstractServer | None = None  # Reference to the server for handling messages
+    file_server: AbstractServer | None = None # Reference to the server for handling files
 
 # Data class to manage data streams
 @dataclass
 class Streams:
-    msg_reader: StreamReader | None    # Reader to read data from the socket (messages)
-    msg_writer: StreamWriter | None    # Writer to write data to the socket (messages)
-    file_reader: StreamReader | None    # Reader to read data from the socket (files)
-    file_writer: StreamWriter | None    # Writer to write data to the socket (files)
+    msg_reader: StreamReader | None = None    # Reader to read data from the socket (messages)
+    msg_writer: StreamWriter | None = None    # Writer to write data to the socket (messages)
+    file_reader: StreamReader | None = None   # Reader to read data from the socket (files)
+    file_writer: StreamWriter | None = None   # Writer to write data to the socket (files)
 
 # Main class representing an asynchronous socket
 @dataclass
 class PeerSocket:
-    id: str | None                 # An identifier for the socket (could be None if not assigned)
-    servers: Servers | None        # References to servers for handling messages and files
-    streams: Streams | None        # Data streams for messages and files
-    history: History | None        # Message history
-    peerdata_server: PeerData | None  # Peer data of this computer
-    peerdata_client: PeerData | None  # Peer data of peer computer
-    msg_comm_connected: bool          # Indicates whether the message communication established
-    file_comm_connected: bool         # Indicates whether the file communication established
+    id: str | None = None                 # An identifier for the socket (could be None if not assigned)
+    servers: Servers | None = None        # References to servers for handling messages and files
+    streams: Streams | None = None        # Data streams for messages and files
+    history: History | None = None        # Message history
+    peerdata: PeerData | None = None      # Peer data of this computer
+    msg_comm_connected: bool = False      # Indicates whether the message communication established
+    file_comm_connected: bool = False     # Indicates whether the file communication established
