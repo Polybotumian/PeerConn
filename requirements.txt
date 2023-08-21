@@ -1,10 +1,16 @@
+altgraph==0.17.3
 click==8.1.6
 colorama==0.4.6
+pefile==2023.2.7
+psutil==5.9.5
+pyinstaller==5.13.0
+pyinstaller-hooks-contrib==2023.6
 PyQt5==5.15.9
 pyqt5-plugins==5.15.9.2.3
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.12.2
 pyqt5-tools==5.15.9.3.3
 python-dotenv==1.0.0
+pywin32-ctypes==0.2.2
 qt5-applications==5.15.2.2.3
 qt5-tools==5.15.2.1.3

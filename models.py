@@ -17,13 +17,18 @@ class PeerData:
     msg_port: int | None = None
     file_port: int | None = None
 
+@dataclass
+class FileData:
+    name: str | None = None
+    extension: str | None = None
+    size : int | None = None
+
 # Data class to represent individual messages
 @dataclass
 class Message:
-    sender: str | None = 'Sender'          # Name of the sender
-    content: str | None = 'None'         # Content of the message
+    sender: str | None = 'Sender'      # Name of the sender
+    content: str | None = 'None'       # Content of the message
     date_time: datetime | None = None  # Indicates when the message was sent/received
-    recieved: bool = False
 
 # Data class to manage message history
 @dataclass

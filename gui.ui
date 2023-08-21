@@ -5,13 +5,28 @@
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>540</height>
+    <height>465</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>465</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>800</width>
+    <height>465</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -29,8 +44,11 @@
       <x>10</x>
       <y>10</y>
       <width>781</width>
-      <height>481</height>
+      <height>411</height>
      </rect>
+    </property>
+    <property name="acceptDrops">
+     <bool>true</bool>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
@@ -41,14 +59,14 @@
     <property name="currentIndex">
      <number>0</number>
     </property>
-    <widget class="QWidget" name="page">
+    <widget class="QWidget" name="page_main">
      <widget class="QWidget" name="formLayoutWidget_2">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>10</y>
         <width>231</width>
-        <height>81</height>
+        <height>51</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="formLayout_user_peerdata">
@@ -61,6 +79,12 @@
        </item>
        <item row="0" column="1">
         <widget class="QLineEdit" name="lineEdit_user_hostname">
+         <property name="toolTip">
+          <string>Your name. Default is your PC name.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
          <property name="readOnly">
           <bool>false</bool>
          </property>
@@ -75,20 +99,12 @@
        </item>
        <item row="1" column="1">
         <widget class="QLineEdit" name="lineEdit_user_local_address">
-         <property name="readOnly">
-          <bool>false</bool>
+         <property name="toolTip">
+          <string>Your IPv4 address.</string>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_user_auto_port">
-         <property name="text">
-          <string>Current Auto Port</string>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="lineEdit_user_auto_port">
          <property name="readOnly">
           <bool>false</bool>
          </property>
@@ -96,14 +112,20 @@
        </item>
       </layout>
      </widget>
-     <widget class="QListView" name="listView_active_connections">
+     <widget class="QListView" name="listView_sockets">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>100</y>
+        <y>70</y>
         <width>231</width>
-        <height>192</height>
+        <height>251</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>List of sockets.</string>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
       </property>
       <property name="editTriggers">
        <set>QAbstractItemView::EditKeyPressed</set>
@@ -118,6 +140,18 @@
         <height>281</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>Chat panel of selected socket.</string>
+      </property>
+      <property name="accessibleDescription">
+       <string/>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::EditKeyPressed</set>
+      </property>
      </widget>
      <widget class="QLineEdit" name="lineEdit_message">
       <property name="geometry">
@@ -128,28 +162,47 @@
         <height>21</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>Message box. Enter key is the hot key for sending message.</string>
+      </property>
+      <property name="placeholderText">
+       <string>Type your message here!</string>
+      </property>
      </widget>
      <widget class="QWidget" name="horizontalLayoutWidget">
       <property name="geometry">
        <rect>
         <x>350</x>
-        <y>330</y>
+        <y>360</y>
         <width>321</width>
         <height>31</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_chat_buttons">
        <item>
-        <widget class="QPushButton" name="pushButton_send">
+        <widget class="QPushButton" name="pushButton_send_message">
+         <property name="toolTip">
+          <string>Send your message/file via this button.</string>
+         </property>
          <property name="text">
-          <string>Send</string>
+          <string>Send Message</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_pick_file">
+         <property name="toolTip">
+          <string>File picker button.</string>
+         </property>
          <property name="text">
-          <string>...</string>
+          <string>Pick File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_send_file">
+         <property name="text">
+          <string>Send File</string>
          </property>
         </widget>
        </item>
@@ -159,19 +212,12 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>300</y>
-        <width>239</width>
+        <y>330</y>
+        <width>231</width>
         <height>31</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_operation_buttons">
-       <item>
-        <widget class="QPushButton" name="pushButton_listen_auto">
-         <property name="text">
-          <string>Listen Auto</string>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QPushButton" name="pushButton_listen">
          <property name="text">
@@ -188,8 +234,196 @@
        </item>
       </layout>
      </widget>
+     <widget class="QLineEdit" name="lineEdit_file_path">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>330</y>
+        <width>501</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Message box. Enter key is the hot key for sending message.</string>
+      </property>
+      <property name="placeholderText">
+       <string>File path</string>
+      </property>
+     </widget>
     </widget>
-    <widget class="QWidget" name="page_2"/>
+    <widget class="QWidget" name="page_about">
+     <widget class="QPlainTextEdit" name="plainTextEdit_about">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>751</width>
+        <height>191</height>
+       </rect>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::StrongFocus</enum>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="inputMethodHints">
+       <set>Qt::ImhNone</set>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+      </property>
+      <property name="documentTitle">
+       <string/>
+      </property>
+      <property name="undoRedoEnabled">
+       <bool>false</bool>
+      </property>
+      <property name="lineWrapMode">
+       <enum>QPlainTextEdit::WidgetWidth</enum>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="plainText">
+       <string>PeerConn is a peer-to-peer socket chat desktop application. It allows you to create multiple sockets to communicate with other sockets. It aims to manage communication and data transfer between computers with a user-friendly graphical interface.
+
+It is developed using Python and many libraries used in development such as PyQt5, asyncio, psutil, logging. 
+
+Due to the handling of multiple sockets and data transfer processes, PeerConn has to work in an async loop. For this reason there are 2 threads that this program has to use. The main thread is for the PyQt5 interface and the other is for PeerConn itself. 
+
+For the sake of integration of PeerConn with PyQt5 and the performance of the application and the nature of async programming, PeerConn has a main method that remains a loop that handles runtime transactions and waits for runtime commands via event. This way all tasks are created in the same loop and are able to execute certain methods in a sync code and it also keeps async sockets alive.
+
+It has a basic logging system that logs actions and errors in the program to a file with the extension &quot;log&quot;.</string>
+      </property>
+      <property name="overwriteMode">
+       <bool>false</bool>
+      </property>
+      <property name="backgroundVisible">
+       <bool>false</bool>
+      </property>
+      <property name="centerOnScroll">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_about">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>81</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>About PeerConn</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_developer_request">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>240</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Developer Request</string>
+      </property>
+     </widget>
+     <widget class="QPlainTextEdit" name="plainTextEdit_developer_request">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>260</y>
+        <width>751</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::StrongFocus</enum>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="inputMethodHints">
+       <set>Qt::ImhNone</set>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+      </property>
+      <property name="documentTitle">
+       <string/>
+      </property>
+      <property name="undoRedoEnabled">
+       <bool>false</bool>
+      </property>
+      <property name="lineWrapMode">
+       <enum>QPlainTextEdit::WidgetWidth</enum>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="plainText">
+       <string>Please report any bugs you have found when using PeerConn. I would also be grateful if you could let me know what you think is missing from PeerConn.
+
+github.com/Polybotumian</string>
+      </property>
+      <property name="overwriteMode">
+       <bool>false</bool>
+      </property>
+      <property name="backgroundVisible">
+       <bool>false</bool>
+      </property>
+      <property name="centerOnScroll">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_about_back">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>330</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Back</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -201,8 +435,46 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>Info</string>
+    </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionPreferences"/>
+    <addaction name="separator"/>
+    <addaction name="actionChange_My_Data"/>
+   </widget>
+   <addaction name="menuOptions"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Theme</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionChange_My_Data">
+   <property name="text">
+    <string>My Data</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
