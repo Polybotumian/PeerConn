@@ -29,6 +29,7 @@ class Message:
     sender: str | None = 'Sender'      # Name of the sender
     content: str | None = 'None'       # Content of the message
     date_time: datetime | None = None  # Indicates when the message was sent/received
+    is_me: bool | None = None
 
 # Data class to manage message history
 @dataclass

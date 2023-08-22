@@ -122,13 +122,19 @@
        </rect>
       </property>
       <property name="toolTip">
-       <string>List of sockets.</string>
+       <string>List of peersockets.</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
       <property name="editTriggers">
        <set>QAbstractItemView::EditKeyPressed</set>
+      </property>
+      <property name="isWrapping" stdset="0">
+       <bool>false</bool>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QListView" name="listView_chat">
@@ -141,7 +147,7 @@
        </rect>
       </property>
       <property name="toolTip">
-       <string>Chat panel of selected socket.</string>
+       <string>Chat panel of selected peersocket.</string>
       </property>
       <property name="accessibleDescription">
        <string/>
@@ -151,6 +157,12 @@
       </property>
       <property name="editTriggers">
        <set>QAbstractItemView::EditKeyPressed</set>
+      </property>
+      <property name="isWrapping" stdset="0">
+       <bool>false</bool>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QLineEdit" name="lineEdit_message">
@@ -163,7 +175,7 @@
        </rect>
       </property>
       <property name="toolTip">
-       <string>Message box. Enter key is the hot key for sending message.</string>
+       <string>Message box. Enter is the hot key for sending message.</string>
       </property>
       <property name="placeholderText">
        <string>Type your message here!</string>
@@ -182,7 +194,7 @@
        <item>
         <widget class="QPushButton" name="pushButton_send_message">
          <property name="toolTip">
-          <string>Send your message/file via this button.</string>
+          <string>Send your message with this button.</string>
          </property>
          <property name="text">
           <string>Send Message</string>
@@ -192,7 +204,7 @@
        <item>
         <widget class="QPushButton" name="pushButton_pick_file">
          <property name="toolTip">
-          <string>File picker button.</string>
+          <string>Opens file dialog.</string>
          </property>
          <property name="text">
           <string>Pick File</string>
@@ -201,6 +213,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_send_file">
+         <property name="toolTip">
+          <string>Send your file with this button.</string>
+         </property>
          <property name="text">
           <string>Send File</string>
          </property>
@@ -220,6 +235,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout_operation_buttons">
        <item>
         <widget class="QPushButton" name="pushButton_listen">
+         <property name="toolTip">
+          <string>To create a server peersocket.</string>
+         </property>
          <property name="text">
           <string>Listen</string>
          </property>
@@ -227,6 +245,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_connect">
+         <property name="toolTip">
+          <string>To create a client peersocket.</string>
+         </property>
          <property name="text">
           <string>Connect</string>
          </property>
@@ -248,6 +269,115 @@
       </property>
       <property name="placeholderText">
        <string>File path</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_help">
+     <widget class="QPushButton" name="pushButton_guide_back">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>370</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Back</string>
+      </property>
+     </widget>
+     <widget class="QPlainTextEdit" name="plainTextEdit_guide">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>751</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::StrongFocus</enum>
+      </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="inputMethodHints">
+       <set>Qt::ImhNone</set>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+      </property>
+      <property name="documentTitle">
+       <string/>
+      </property>
+      <property name="undoRedoEnabled">
+       <bool>false</bool>
+      </property>
+      <property name="lineWrapMode">
+       <enum>QPlainTextEdit::WidgetWidth</enum>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="plainText">
+       <string>Host Name and Local Address:
+PeerConn automatically assigns your computer name as &quot;Host Name&quot; and finds your IPv4 to assign it as &quot;Local Address&quot;. The most important thing here is your Local Address, which you can use to set up listener peer sockets for incoming connections, or to connect to another computer using its IPv4.
+
+Listen and Connect buttons:
+These buttons allow you to create 2 different types of peersockets, these are server and client peersockets. When you create a peersocket it will appear in a list on the left hand side of the window.
+
+Peersockets:
+The left pane of the window is a list of peersockets. You can select a peersocket by clicking on it. When a socket is selected, you can only interact with that peersocket. You can also change the name of the peersocket from the context menu that opens when you right click on it.
+
+Server Peersocket:
+This type of peersocket is for incoming connections. A server peersocket has a down arrow icon to indicate that it is a server.
+
+Client Peersocket:
+This type of peersocket is for connecting to a server peersocket. A client peersocket has an up arrow icon to indicate that it is a client.
+
+Peersocket icon colours:
+       Yellow: Indicates that it is active and waiting for a connection.
+       Green: Indicates that it is active and connected.
+       Red: Indicates inactive and connection lost.
+
+To connect over different networks you should use 3rd party tools. (e.g. Localtonet)</string>
+      </property>
+      <property name="overwriteMode">
+       <bool>false</bool>
+      </property>
+      <property name="backgroundVisible">
+       <bool>false</bool>
+      </property>
+      <property name="centerOnScroll">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_about_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>31</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Guide</string>
       </property>
      </widget>
     </widget>
@@ -414,7 +544,7 @@ github.com/Polybotumian</string>
       <property name="geometry">
        <rect>
         <x>340</x>
-        <y>330</y>
+        <y>370</y>
         <width>75</width>
         <height>23</height>
        </rect>

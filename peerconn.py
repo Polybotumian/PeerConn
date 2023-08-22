@@ -18,7 +18,7 @@ class PeerConn:
     _command_event: Event | None
     _command_queue: Queue | None
     log_filename: str = 'peerconn.log'
-    _delimeter: bytes | None = b'PEERCONN_DELIMETER'
+    _file_delimeter: bytes | None = b'PEERCONN_DELIMETER'
 
     def __init__(self) -> None:
         self._configure_logging()
@@ -117,11 +117,11 @@ class PeerConn:
                     await peersocket_ref.streams.file_writer.wait_closed()
                     peersocket_ref.streams.file_writer = None
 
-            peersocket_ref.servers = None
-            peersocket_ref.streams = None
+            # peersocket_ref.servers = None # These two are currently an obstacle to icon change on the UI side.
+            # peersocket_ref.streams = None
             self._logger.info(f'{self.hm_close.__name__}: OK.')
-        elif not peersocket_ref.servers and not peersocket_ref.streams:
-            self._logger.warning(f'{self.hm_close.__name__}: {id} is already closed!')
+        # elif not peersocket_ref.servers and not peersocket_ref.streams: # This condition will always be false due to current specifications
+        #     self._logger.warning(f'{self.hm_close.__name__}: {id} is already closed!')
         else:
             self._logger.warning(f'{self.hm_close.__name__}: {id} not found!')
 
@@ -168,7 +168,8 @@ class PeerConn:
                             Message(
                                 sender= peersocket.peerdata.name,
                                 content= data.decode("utf-8"),
-                                date_time= datetime.now()
+                                date_time= datetime.now(),
+                                is_me= False
                             )
                         )
                         peersocket.history.new_messages += 1
@@ -221,19 +222,35 @@ class PeerConn:
 
             while peersocket.file_comm_connected:
                 try:
-                    serialized_data = await reader.readuntil(PeerConn._delimeter)
-                    file_data:FileData = loads(serialized_data.removesuffix(PeerConn._delimeter))
-                    logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: {file_data}')
+                    serialized_data = await reader.readuntil(PeerConn._file_delimeter)
+                    file_data:FileData = loads(serialized_data.removesuffix(PeerConn._file_delimeter))
+                    logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Receiving a file: {file_data}')
 
                     received_file_path = path.join(path.abspath(path.dirname(sys_argv[0])), f'{file_data.name}{file_data.extension}')
                     with open(received_file_path, 'wb') as received_file:
+                        peersocket.history.messages.append(
+                            Message(
+                                sender= PeerConn.__name__,
+                                content= f'{peersocket.peerdata.name} is sending you {file_data.name}{file_data.extension}, {file_data.size}.',
+                                date_time= datetime.now()
+                            )
+                        )
+                        peersocket.history.new_messages += 1
                         readed_data_size = 0
                         while True:
                             data = await reader.read(4096)
                             readed_data_size += len(data)
                             received_file.write(data)
                             if readed_data_size == file_data.size:
-                                logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Received!')
+                                logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
+                                peersocket.history.messages.append(
+                                    Message(
+                                        sender= PeerConn.__name__,
+                                        content= f'{file_data.name}{file_data.extension} is completely received! Received file size = {readed_data_size}.',
+                                        date_time= datetime.now()
+                                    )
+                                )
+                                peersocket.history.new_messages += 1
                                 break
                     # await asyncio_sleep(PeerConn._SLEEP_TIME)
                 except IncompleteReadError as ex:
@@ -318,7 +335,7 @@ class PeerConn:
         try:
             peersocket_ref = self.get_socket(id)
             peersocket_ref.streams.msg_writer.write(data.encode("utf-8"))
-            peersocket_ref.history.messages.append(Message(self._peerdata.name, data, datetime.now()))
+            peersocket_ref.history.messages.append(Message(self._peerdata.name, data, datetime.now(), is_me= True))
             await peersocket_ref.streams.msg_writer.drain()
             self._logger.info(f'{self.hm_send_message.__name__}: {peersocket_ref.id}')
         except ConnectionError as ex:
@@ -333,8 +350,17 @@ class PeerConn:
                 file_name_without_extension = file_name_without_extension.split('/')[-1]
                 file_data = FileData(name= file_name_without_extension, extension= file_extension, size= path.getsize(file_path))
                 serialized_file_data = dumps(file_data)
+                self._logger.info(f'{peersocket_ref.id} - {PeerConn.hm_send_file.__name__}: Sending a file: {file_data}')
+                peersocket_ref.history.messages.append(
+                    Message(
+                        sender= PeerConn.__name__,
+                        content= f'Sending {file_data.name}{file_data.extension}, {file_data.size} to {peersocket_ref.peerdata.name}.',
+                        date_time= datetime.now()
+                    )
+                )
+                peersocket_ref.history.new_messages += 1
                 peersocket_ref.streams.file_writer.write(serialized_file_data)
-                peersocket_ref.streams.file_writer.write(self._delimeter)
+                peersocket_ref.streams.file_writer.write(self._file_delimeter)
                 # await asyncio_sleep(self._SLEEP_TIME)
                 with open(file_path, 'rb') as file:
                     while True:
@@ -344,6 +370,14 @@ class PeerConn:
                         peersocket_ref.streams.file_writer.write(chunk)
                         await peersocket_ref.streams.file_writer.drain()
                 self._logger.info(f'{self.hm_send_file.__name__}: Sent to {peersocket_ref.id}')
+                peersocket_ref.history.messages.append(
+                    Message(
+                        sender= PeerConn.__name__,
+                        content= f'Sending {file_data.name}{file_data.extension} to {peersocket_ref.peerdata.name} is completed!',
+                        date_time= datetime.now()
+                    )
+                )
+                peersocket_ref.history.new_messages += 1
             else:
                 raise FileNotFoundError
         except Exception as ex:

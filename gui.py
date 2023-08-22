@@ -57,12 +57,16 @@ class Ui_MainWindow(object):
         self.listView_sockets.setGeometry(QtCore.QRect(10, 70, 231, 251))
         self.listView_sockets.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.listView_sockets.setEditTriggers(QtWidgets.QAbstractItemView.EditKeyPressed)
+        self.listView_sockets.setProperty("isWrapping", False)
+        self.listView_sockets.setWordWrap(True)
         self.listView_sockets.setObjectName("listView_sockets")
         self.listView_chat = QtWidgets.QListView(self.page_main)
         self.listView_chat.setGeometry(QtCore.QRect(260, 11, 501, 281))
         self.listView_chat.setAccessibleDescription("")
         self.listView_chat.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.listView_chat.setEditTriggers(QtWidgets.QAbstractItemView.EditKeyPressed)
+        self.listView_chat.setProperty("isWrapping", False)
+        self.listView_chat.setWordWrap(True)
         self.listView_chat.setObjectName("listView_chat")
         self.lineEdit_message = QtWidgets.QLineEdit(self.page_main)
         self.lineEdit_message.setGeometry(QtCore.QRect(260, 300, 501, 21))
@@ -98,6 +102,34 @@ class Ui_MainWindow(object):
         self.lineEdit_file_path.setGeometry(QtCore.QRect(260, 330, 501, 21))
         self.lineEdit_file_path.setObjectName("lineEdit_file_path")
         self.stackedWidget.addWidget(self.page_main)
+        self.page_help = QtWidgets.QWidget()
+        self.page_help.setObjectName("page_help")
+        self.pushButton_guide_back = QtWidgets.QPushButton(self.page_help)
+        self.pushButton_guide_back.setGeometry(QtCore.QRect(340, 370, 75, 23))
+        self.pushButton_guide_back.setObjectName("pushButton_guide_back")
+        self.plainTextEdit_guide = QtWidgets.QPlainTextEdit(self.page_help)
+        self.plainTextEdit_guide.setGeometry(QtCore.QRect(10, 30, 751, 331))
+        self.plainTextEdit_guide.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.plainTextEdit_guide.setAcceptDrops(False)
+        self.plainTextEdit_guide.setStyleSheet("")
+        self.plainTextEdit_guide.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.plainTextEdit_guide.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.plainTextEdit_guide.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.plainTextEdit_guide.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.plainTextEdit_guide.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.plainTextEdit_guide.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        self.plainTextEdit_guide.setDocumentTitle("")
+        self.plainTextEdit_guide.setUndoRedoEnabled(False)
+        self.plainTextEdit_guide.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
+        self.plainTextEdit_guide.setReadOnly(True)
+        self.plainTextEdit_guide.setOverwriteMode(False)
+        self.plainTextEdit_guide.setBackgroundVisible(False)
+        self.plainTextEdit_guide.setCenterOnScroll(False)
+        self.plainTextEdit_guide.setObjectName("plainTextEdit_guide")
+        self.label_about_2 = QtWidgets.QLabel(self.page_help)
+        self.label_about_2.setGeometry(QtCore.QRect(10, 10, 31, 16))
+        self.label_about_2.setObjectName("label_about_2")
+        self.stackedWidget.addWidget(self.page_help)
         self.page_about = QtWidgets.QWidget()
         self.page_about.setObjectName("page_about")
         self.plainTextEdit_about = QtWidgets.QPlainTextEdit(self.page_about)
@@ -145,7 +177,7 @@ class Ui_MainWindow(object):
         self.plainTextEdit_developer_request.setCenterOnScroll(False)
         self.plainTextEdit_developer_request.setObjectName("plainTextEdit_developer_request")
         self.pushButton_about_back = QtWidgets.QPushButton(self.page_about)
-        self.pushButton_about_back.setGeometry(QtCore.QRect(340, 330, 75, 23))
+        self.pushButton_about_back.setGeometry(QtCore.QRect(340, 370, 75, 23))
         self.pushButton_about_back.setObjectName("pushButton_about_back")
         self.stackedWidget.addWidget(self.page_about)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -188,19 +220,45 @@ class Ui_MainWindow(object):
         self.lineEdit_user_hostname.setToolTip(_translate("MainWindow", "Your name. Default is your PC name."))
         self.label_user_local_address.setText(_translate("MainWindow", "Local Address"))
         self.lineEdit_user_local_address.setToolTip(_translate("MainWindow", "Your IPv4 address."))
-        self.listView_sockets.setToolTip(_translate("MainWindow", "List of sockets."))
-        self.listView_chat.setToolTip(_translate("MainWindow", "Chat panel of selected socket."))
-        self.lineEdit_message.setToolTip(_translate("MainWindow", "Message box. Enter key is the hot key for sending message."))
+        self.listView_sockets.setToolTip(_translate("MainWindow", "List of peersockets."))
+        self.listView_chat.setToolTip(_translate("MainWindow", "Chat panel of selected peersocket."))
+        self.lineEdit_message.setToolTip(_translate("MainWindow", "Message box. Enter is the hot key for sending message."))
         self.lineEdit_message.setPlaceholderText(_translate("MainWindow", "Type your message here!"))
-        self.pushButton_send_message.setToolTip(_translate("MainWindow", "Send your message/file via this button."))
+        self.pushButton_send_message.setToolTip(_translate("MainWindow", "Send your message with this button."))
         self.pushButton_send_message.setText(_translate("MainWindow", "Send Message"))
-        self.pushButton_pick_file.setToolTip(_translate("MainWindow", "File picker button."))
+        self.pushButton_pick_file.setToolTip(_translate("MainWindow", "Opens file dialog."))
         self.pushButton_pick_file.setText(_translate("MainWindow", "Pick File"))
+        self.pushButton_send_file.setToolTip(_translate("MainWindow", "Send your file with this button."))
         self.pushButton_send_file.setText(_translate("MainWindow", "Send File"))
+        self.pushButton_listen.setToolTip(_translate("MainWindow", "To create a server peersocket."))
         self.pushButton_listen.setText(_translate("MainWindow", "Listen"))
+        self.pushButton_connect.setToolTip(_translate("MainWindow", "To create a client peersocket."))
         self.pushButton_connect.setText(_translate("MainWindow", "Connect"))
         self.lineEdit_file_path.setToolTip(_translate("MainWindow", "Message box. Enter key is the hot key for sending message."))
         self.lineEdit_file_path.setPlaceholderText(_translate("MainWindow", "File path"))
+        self.pushButton_guide_back.setText(_translate("MainWindow", "Back"))
+        self.plainTextEdit_guide.setPlainText(_translate("MainWindow", "Host Name and Local Address:\n"
+"PeerConn automatically assigns your computer name as \"Host Name\" and finds your IPv4 to assign it as \"Local Address\". The most important thing here is your Local Address, which you can use to set up listener peer sockets for incoming connections, or to connect to another computer using its IPv4.\n"
+"\n"
+"Listen and Connect buttons:\n"
+"These buttons allow you to create 2 different types of peersockets, these are server and client peersockets. When you create a peersocket it will appear in a list on the left hand side of the window.\n"
+"\n"
+"Peersockets:\n"
+"The left pane of the window is a list of peersockets. You can select a peersocket by clicking on it. When a socket is selected, you can only interact with that peersocket. You can also change the name of the peersocket from the context menu that opens when you right click on it.\n"
+"\n"
+"Server Peersocket:\n"
+"This type of peersocket is for incoming connections. A server peersocket has a down arrow icon to indicate that it is a server.\n"
+"\n"
+"Client Peersocket:\n"
+"This type of peersocket is for connecting to a server peersocket. A client peersocket has an up arrow icon to indicate that it is a client.\n"
+"\n"
+"Peersocket icon colours:\n"
+"       Yellow: Indicates that it is active and waiting for a connection.\n"
+"       Green: Indicates that it is active and connected.\n"
+"       Red: Indicates inactive and connection lost.\n"
+"\n"
+"To connect over different networks you should use 3rd party tools. (e.g. Localtonet)"))
+        self.label_about_2.setText(_translate("MainWindow", "Guide"))
         self.plainTextEdit_about.setPlainText(_translate("MainWindow", "PeerConn is a peer-to-peer socket chat desktop application. It allows you to create multiple sockets to communicate with other sockets. It aims to manage communication and data transfer between computers with a user-friendly graphical interface.\n"
 "\n"
 "It is developed using Python and many libraries used in development such as PyQt5, asyncio, psutil, logging. \n"

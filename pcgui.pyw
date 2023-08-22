@@ -2,12 +2,65 @@ from gui import Ui_MainWindow
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QListView, QVBoxLayout, QWidget,
                              QStyledItemDelegate, QStyle, QMenu, QAction, QDialog, QLabel, QFormLayout, 
                              QLineEdit, QMessageBox, QFileDialog)
-from PyQt5.QtCore import QStringListModel, QAbstractListModel, Qt, QSize, QPoint, QThread, pyqtSignal, QTimer, QModelIndex
-from PyQt5.QtGui import QPainter, QColor, QIcon, QFontDatabase, QStandardItemModel, QStandardItem
+from PyQt5.QtCore import QStringListModel, QAbstractListModel, Qt, QSize, QPoint, QThread, pyqtSignal, QTimer, QModelIndex, QRectF
+from PyQt5.QtGui import QPainter, QColor, QIcon, QFontDatabase, QStandardItemModel, QStandardItem, QTextDocument, QTextBlockFormat, QTextCursor, QBrush, QPainterPath, QPen, QTextOption
 from sys import argv as sys_argv, exit as sys_exit
-from peerconn import PeerConn, PeerData
+from peerconn import PeerConn, PeerData, Message
 from asyncio import run as async_run
 from time import sleep
+from pickle import loads, dumps
+# from typing import List
+
+class ChatItemDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        message_data = index.data(Qt.ItemDataRole.UserRole + 1)
+        message: Message = loads(message_data)
+        if message is not None:
+            message_box_rect = option.rect
+            message_box_radius = 3
+            message_box_path = QPainterPath()
+            message_box_path.addRoundedRect(QRectF(message_box_rect), message_box_radius, message_box_radius)
+            
+             # Define a pen for the border
+            border_pen = QPen(QColor(0, 0, 0))  # Customize the border color and width as needed
+            border_pen.setWidth(1)  # Adjust the border width as needed
+            
+            # Set the pen on the painter
+            painter.setPen(border_pen)
+            painter.drawRect(message_box_rect)
+
+            # Set the background color within the rounded path
+            if message.is_me:
+                painter.setBrush(QBrush(QColor(128, 172, 242)))
+            else:
+                painter.setBrush(QBrush(QColor(121, 232, 109)))
+            
+            # Clip the drawing operations to the rounded path
+            painter.save()
+            painter.setClipPath(message_box_path)
+            
+            # Fill the rounded background
+            painter.fillPath(message_box_path, painter.brush())
+            
+            document = QTextDocument()
+            document.setPlainText(message.content)
+            document.setTextWidth(message_box_rect.width())
+            
+            text_height = document.size().height()
+            vertical_offset = (message_box_rect.height() - text_height) / 2
+            
+            # Translate and draw the text within the rounded path
+            painter.translate(message_box_rect.topLeft())
+            document.drawContents(painter, QRectF(0, vertical_offset, message_box_rect.width(), text_height))
+            
+            painter.restore()  # Restore painter state after clipping
+        else:
+            super().paint(painter, option, index)
+    
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        size.setHeight(size.height() + 0)  # Add extra spacing
+        return size
 
 class PeerConnThread(QThread):
     peerconn_ref: PeerConn | None
@@ -124,6 +177,7 @@ class PeerConnGUI:
     _main_window: QMainWindow | None
     _dialog: QDialog | None = None
     _qtimer_update_ui: QTimer | None
+    # _available_themes: List[str] | None
     # QListView Models
     _model_socket_list: QStandardItemModel | None
     _model_chat: QStandardItemModel | None
@@ -146,6 +200,8 @@ class PeerConnGUI:
         self._qtimer_update_ui.timeout.connect(self.update_ui)
         self._qtimer_update_ui.start(50)
         self.set_ui()
+        # self._available_themes = ["Fusion", "Windows", "WindowsXP", "WindowsVista", "Macintosh"]
+        # self._app.setStyle(self._available_themes[4])
         self._peerconn._logger.info(f'UI-{PeerConnGUI.__name__}: Initialized.')
 
     def set_ui(self) -> None:
@@ -168,7 +224,9 @@ class PeerConnGUI:
         self.set_toolbar_actions()
 
     def set_toolbar_actions(self) -> None:
-        self._ui.actionAbout.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(1))
+        self._ui.actionPreferences.setEnabled(False)
+        self._ui.actionHelp.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(1))
+        self._ui.actionAbout.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(2))
         self._ui.actionChange_My_Data.triggered.connect(self.edit_my_data_dialog)
 
     def set_user_data_ui(self) -> None:
@@ -188,6 +246,7 @@ class PeerConnGUI:
         self._ui.pushButton_send_message.clicked.connect(self.send_message)
         self._ui.pushButton_send_message.setEnabled(False)
         self._ui.pushButton_about_back.clicked.connect(lambda:self._ui.stackedWidget.setCurrentIndex(0))
+        self._ui.pushButton_guide_back.clicked.connect(lambda:self._ui.stackedWidget.setCurrentIndex(0))
         self._ui.pushButton_pick_file.clicked.connect(self.pick_file)
         self._ui.pushButton_pick_file.setEnabled(False)
         self._ui.pushButton_send_file.clicked.connect(self.send_file)
@@ -334,6 +393,7 @@ class PeerConnGUI:
 
         self._model_chat = QStandardItemModel()
         self._ui.listView_chat.setModel(self._model_chat)
+        self._ui.listView_chat.setItemDelegate(ChatItemDelegate())
         self._peerconn._logger.info(f'UI-{self.set_QListViews.__name__}: Initialized')
 
     def context_menu_active_connections(self, position: QPoint) -> None:
@@ -423,11 +483,10 @@ class PeerConnGUI:
                     if history.new_messages > 0 or self._i_sent_data:
                         for i in range(self._model_chat.rowCount(), len(history.messages)):
                                 msg = history.messages[i]
-                                self._model_chat.appendRow(
-                                    QStandardItem(
-                                        f'{msg.date_time.day}.{msg.date_time.month}.{msg.date_time.year} - {msg.date_time.hour}:{msg.date_time.minute} - {msg.sender}: {msg.content}'
-                                    )
-                                )
+                                item = QStandardItem()
+                                item.setFlags(item.flags() | Qt.TextInteractionFlag.TextSelectableByMouse | Qt.ItemFlag.ItemIsSelectable)
+                                item.setData(dumps(msg), Qt.ItemDataRole.UserRole + 1)
+                                self._model_chat.appendRow(item)
                         history.new_messages = 0
                         self._i_sent_data = False
 
