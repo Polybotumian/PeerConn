@@ -9,6 +9,14 @@ class ServerResponses:
     FILE_CHUNK: str = 'CHUNK_R3513V3D'
     FILE: str = 'F1L3_R3513V3D'
 
+class MessageTypes:
+    ME: int = 0
+    PEER: int = 1
+    CONNECTION_ESTABLISHED: int = 2
+    CONNECTION_LOST: int = 3
+    SYSTEM_NOTIFY: int = 4
+    SYSTEM_WARN: int = 5
+
 # Data class to store peer connection details
 @dataclass
 class PeerData:
@@ -29,7 +37,7 @@ class Message:
     sender: str | None = 'Sender'      # Name of the sender
     content: str | None = 'None'       # Content of the message
     date_time: datetime | None = None  # Indicates when the message was sent/received
-    is_me: bool | None = None
+    type: int | None = None
 
 # Data class to manage message history
 @dataclass

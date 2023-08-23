@@ -1,66 +1,13 @@
 from gui import Ui_MainWindow
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QListView, QVBoxLayout, QWidget,
-                             QStyledItemDelegate, QStyle, QMenu, QAction, QDialog, QLabel, QFormLayout, 
-                             QLineEdit, QMessageBox, QFileDialog)
-from PyQt5.QtCore import QStringListModel, QAbstractListModel, Qt, QSize, QPoint, QThread, pyqtSignal, QTimer, QModelIndex, QRectF
-from PyQt5.QtGui import QPainter, QColor, QIcon, QFontDatabase, QStandardItemModel, QStandardItem, QTextDocument, QTextBlockFormat, QTextCursor, QBrush, QPainterPath, QPen, QTextOption
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMenu, QAction, QDialog, QLabel, QFormLayout, 
+                             QLineEdit, QMessageBox, QFileDialog, QSpinBox)
+from PyQt5.QtCore import Qt, QPoint, QThread, pyqtSignal, QTimer, QSize
+from PyQt5.QtGui import QColor, QIcon, QStandardItemModel, QStandardItem
 from sys import argv as sys_argv, exit as sys_exit
-from peerconn import PeerConn, PeerData, Message
+from peerconn import PeerConn, PeerData, Message, MessageTypes
 from asyncio import run as async_run
 from time import sleep
-from pickle import loads, dumps
-# from typing import List
-
-class ChatItemDelegate(QStyledItemDelegate):
-    def paint(self, painter, option, index):
-        message_data = index.data(Qt.ItemDataRole.UserRole + 1)
-        message: Message = loads(message_data)
-        if message is not None:
-            message_box_rect = option.rect
-            message_box_radius = 3
-            message_box_path = QPainterPath()
-            message_box_path.addRoundedRect(QRectF(message_box_rect), message_box_radius, message_box_radius)
-            
-             # Define a pen for the border
-            border_pen = QPen(QColor(0, 0, 0))  # Customize the border color and width as needed
-            border_pen.setWidth(1)  # Adjust the border width as needed
-            
-            # Set the pen on the painter
-            painter.setPen(border_pen)
-            painter.drawRect(message_box_rect)
-
-            # Set the background color within the rounded path
-            if message.is_me:
-                painter.setBrush(QBrush(QColor(128, 172, 242)))
-            else:
-                painter.setBrush(QBrush(QColor(121, 232, 109)))
-            
-            # Clip the drawing operations to the rounded path
-            painter.save()
-            painter.setClipPath(message_box_path)
-            
-            # Fill the rounded background
-            painter.fillPath(message_box_path, painter.brush())
-            
-            document = QTextDocument()
-            document.setPlainText(message.content)
-            document.setTextWidth(message_box_rect.width())
-            
-            text_height = document.size().height()
-            vertical_offset = (message_box_rect.height() - text_height) / 2
-            
-            # Translate and draw the text within the rounded path
-            painter.translate(message_box_rect.topLeft())
-            document.drawContents(painter, QRectF(0, vertical_offset, message_box_rect.width(), text_height))
-            
-            painter.restore()  # Restore painter state after clipping
-        else:
-            super().paint(painter, option, index)
-    
-    def sizeHint(self, option, index):
-        size = super().sizeHint(option, index)
-        size.setHeight(size.height() + 0)  # Add extra spacing
-        return size
+from os import path
 
 class PeerConnThread(QThread):
     peerconn_ref: PeerConn | None
@@ -77,7 +24,6 @@ class PeerConnThread(QThread):
 class DialogListen(QDialog):
     def __init__(self, local_address: str) -> None:
         super().__init__()
-        # self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle('Create Listener')
         self.setFixedSize(240, 240)
         layout = QFormLayout()
@@ -86,10 +32,14 @@ class DialogListen(QDialog):
         self.QLineEdit_local_address = QLineEdit(local_address)
         self.QLineEdit_local_address.setReadOnly(True)
         layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
-        self.QLineEdit_msg_port = QLineEdit()
-        layout.addRow(QLabel('Message Port'), self.QLineEdit_msg_port)
-        self.QLineEdit_file_port = QLineEdit()
-        layout.addRow(QLabel('File Port'), self.QLineEdit_file_port)
+        self.QSpinBox_msg_port = QSpinBox()
+        self.QSpinBox_msg_port.setMinimum(49152)
+        self.QSpinBox_msg_port.setMaximum(65535 )
+        layout.addRow(QLabel('Message Port'), self.QSpinBox_msg_port)
+        self.QSpinBox_file_port = QSpinBox()
+        self.QSpinBox_file_port.setMinimum(49152)
+        self.QSpinBox_file_port.setMaximum(65535 )
+        layout.addRow(QLabel('File Port'), self.QSpinBox_file_port)
         self.QPushButton_create_listener = QPushButton('Create')
         self.QPushButton_create_listener.clicked.connect(self.accept)
         layout.addRow(self.QPushButton_create_listener)
@@ -101,7 +51,6 @@ class DialogListen(QDialog):
 class DialogConnect(QDialog):
     def __init__(self) -> None:
         super().__init__()
-        # self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle('Create Connection')
         self.setFixedSize(240, 240)
         layout = QFormLayout()
@@ -109,10 +58,14 @@ class DialogConnect(QDialog):
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
         self.QLineEdit_local_address = QLineEdit()
         layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
-        self.QLineEdit_msg_port = QLineEdit()
-        layout.addRow(QLabel('Message Port'), self.QLineEdit_msg_port)
-        self.QLineEdit_file_port = QLineEdit()
-        layout.addRow(QLabel('File Port'), self.QLineEdit_file_port)
+        self.QSpinBox_msg_port = QSpinBox()
+        self.QSpinBox_msg_port.setMinimum(49152)
+        self.QSpinBox_msg_port.setMaximum(65535 )
+        layout.addRow(QLabel('Message Port'), self.QSpinBox_msg_port)
+        self.QSpinBox_file_port = QSpinBox()
+        self.QSpinBox_file_port.setMinimum(49152)
+        self.QSpinBox_file_port.setMaximum(65535 )
+        layout.addRow(QLabel('File Port'), self.QSpinBox_file_port)
         self.QPushButton_create_listener = QPushButton('Connect')
         self.QPushButton_create_listener.clicked.connect(self.accept)
         layout.addRow(self.QPushButton_create_listener)
@@ -150,7 +103,6 @@ class DialogEditConnectionItem(QDialog):
 class DialogEditMyData(QDialog):
     def __init__(self, peerdata: PeerData) -> None:
         super().__init__()
-        # self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle(f'Edit My Data')
         self.setFixedSize(240, 140)
         layout = QFormLayout()
@@ -177,12 +129,12 @@ class PeerConnGUI:
     _main_window: QMainWindow | None
     _dialog: QDialog | None = None
     _qtimer_update_ui: QTimer | None
-    # _available_themes: List[str] | None
+    ICON_FOLDER: str | None
     # QListView Models
     _model_socket_list: QStandardItemModel | None
     _model_chat: QStandardItemModel | None
     # Flags
-    _i_sent_data: bool = False
+    _update_chat: bool = False
     # Icons Names
     icon_client_active: QIcon | None
     icon_client_inactive: QIcon | None
@@ -200,21 +152,21 @@ class PeerConnGUI:
         self._qtimer_update_ui.timeout.connect(self.update_ui)
         self._qtimer_update_ui.start(50)
         self.set_ui()
-        # self._available_themes = ["Fusion", "Windows", "WindowsXP", "WindowsVista", "Macintosh"]
-        # self._app.setStyle(self._available_themes[4])
         self._peerconn._logger.info(f'UI-{PeerConnGUI.__name__}: Initialized.')
 
     def set_ui(self) -> None:
         self._main_window = QMainWindow()
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self._main_window)
-        self.icon_client_active: QIcon = QIcon('client_active.png')
-        self.icon_client_inactive: QIcon = QIcon('client_inactive.png')
-        self.icon_client_waiting: QIcon = QIcon('client_waiting.png')
-        self.icon_server_active: QIcon = QIcon('server_active.png')
-        self.icon_server_inactive: QIcon = QIcon('server_inactive.png')
-        self.icon_server_waiting: QIcon = QIcon('server_waiting.png')
+        self.ICON_FOLDER = path.join(self._peerconn._BASE_PATH, 'icons')
+        self.icon_client_active = QIcon(path.join(self.ICON_FOLDER, 'sockets/client_active.png'))
+        self.icon_client_inactive = QIcon(path.join(self.ICON_FOLDER,'sockets/client_inactive.png'))
+        self.icon_client_waiting = QIcon(path.join(self.ICON_FOLDER,'sockets/client_waiting.png'))
+        self.icon_server_active = QIcon(path.join(self.ICON_FOLDER,'sockets/server_active.png'))
+        self.icon_server_inactive = QIcon(path.join(self.ICON_FOLDER,'sockets/server_inactive.png'))
+        self.icon_server_waiting = QIcon(path.join(self.ICON_FOLDER,'sockets/server_waiting.png'))
         self._main_window.setWindowTitle(self.MWINDOW_TITLE)
+        self._main_window.setWindowIcon(QIcon(path.join(self.ICON_FOLDER,'window/peerconn.png')))
         self.set_user_data_ui()
         self._ui.listView_chat.setEnabled(False)
         self._ui.lineEdit_message.returnPressed.connect(self.send_message)
@@ -255,25 +207,32 @@ class PeerConnGUI:
 
     def send_message(self) -> None:
         index = self._ui.listView_sockets.currentIndex()
-        if index.isValid():
+        if index.isValid()and self._ui.lineEdit_message.text():
             selected_item = self._model_socket_list.itemFromIndex(index)
             if selected_item:
                 peersocket_id = selected_item.data(Qt.ItemDataRole.UserRole + 1)
                 my_message = self._ui.lineEdit_message.text()
                 self._peerconn.send_message(peersocket_id, my_message)
-                self._i_sent_data = True
+                self._update_chat = True
                 self._ui.lineEdit_message.clear()
 
     def send_file(self) -> None:
         index = self._ui.listView_sockets.currentIndex()
-        if index.isValid():
+        if index.isValid() and self._ui.lineEdit_file_path.text():
             selected_item = self._model_socket_list.itemFromIndex(index)
             if selected_item:
                 peersocket_id = selected_item.data(Qt.ItemDataRole.UserRole + 1)
                 file_path = self._ui.lineEdit_file_path.text()
                 self._peerconn.send_file(peersocket_id, file_path)
-                self._i_sent_data = True
+                self._update_chat = True
                 self._ui.lineEdit_file_path.clear()
+        else:
+            message_box = QMessageBox()
+            message_box.setWindowTitle('No File Path')
+            message_box.setText('You have\'nt select a file, you cannot use "Send File" button!')
+            message_box.setIcon(QMessageBox.Icon.Warning)
+            message_box.addButton(QMessageBox.StandardButton.Ok)
+            message_box.exec_()
     
     def pick_file(self):
         options = QFileDialog.Options()
@@ -289,21 +248,22 @@ class PeerConnGUI:
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 display_name = self._dialog.QLineEdit_display_name.text()
                 local_address = self._dialog.QLineEdit_local_address.text()
-                msg_port = int(self._dialog.QLineEdit_msg_port.text())
-                file_port = int(self._dialog.QLineEdit_file_port.text())
-                if msg_port != file_port:
+                msg_port = self._dialog.QSpinBox_msg_port.value()
+                file_port = self._dialog.QSpinBox_file_port.value()
+                if len(display_name) > 0 and self._peerconn.is_valid_ipv4(local_address) and msg_port != file_port:
                     peerdata = PeerData(display_name, local_address, msg_port, file_port)
                     id = self._peerconn.create_peer_socket()
                     self._peerconn.set_peersocket(id, peerdata)
                     self._peerconn.set_listener(id)
                     item = QStandardItem(peerdata.name)
+                    item.setToolTip(f'address: {peerdata.local_address},\nmessage port: {peerdata.msg_port},\nfile port:{peerdata.file_port}')
                     item.setIcon(self.icon_server_waiting)
                     item.setData(id, Qt.ItemDataRole.UserRole + 1)
                     self._model_socket_list.appendRow(item)
                 else:
                     message_box = QMessageBox()
                     message_box.setWindowTitle('Wrong Inputs')
-                    message_box.setText('Check if IP address is correct and ports are different.')
+                    message_box.setText('Check if display name is not empty and IP address is correct and ports are different.')
                     message_box.setIcon(QMessageBox.Icon.Warning)
                     message_box.addButton(QMessageBox.StandardButton.Ok)
                     message_box.exec_()
@@ -317,9 +277,9 @@ class PeerConnGUI:
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 display_name = self._dialog.QLineEdit_display_name.text()
                 local_address = self._dialog.QLineEdit_local_address.text()
-                msg_port = int(self._dialog.QLineEdit_msg_port.text())
-                file_port = int(self._dialog.QLineEdit_file_port.text())
-                if msg_port != file_port:
+                msg_port = self._dialog.QSpinBox_msg_port.value()
+                file_port = self._dialog.QSpinBox_file_port.value()
+                if len(display_name) > 0 and self._peerconn.is_valid_ipv4(local_address) and msg_port != file_port:
                     peerdata = PeerData(display_name, local_address, msg_port, file_port)
                     id = self._peerconn.create_peer_socket()
                     self._peerconn.set_peersocket(id, peerdata)
@@ -331,7 +291,7 @@ class PeerConnGUI:
                 else:
                     message_box = QMessageBox()
                     message_box.setWindowTitle('Wrong Inputs')
-                    message_box.setText('Check if IP address is correct and ports are different.')
+                    message_box.setText('Check if display name is not empty and IP address is correct and ports are different.')
                     message_box.setIcon(QMessageBox.Icon.Warning)
                     message_box.addButton(QMessageBox.StandardButton.Ok)
                     message_box.exec_()
@@ -363,9 +323,16 @@ class PeerConnGUI:
             message_box = QMessageBox()
             self._peerconn._logger.info(f'UI-{self.edit_my_data_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
-                if self._peerconn._peerdata.name != self._dialog.QLineEdit_display_name.text():
+                if len(self._dialog.QLineEdit_display_name.text()) > 0 and self._peerconn._peerdata.name != self._dialog.QLineEdit_display_name.text():
                     self._peerconn._peerdata.name = self._dialog.QLineEdit_display_name.text()
-                if self._peerconn._peerdata.local_address != self._dialog.QLineEdit_local_address.text():
+                else:
+                    message_box = QMessageBox()
+                    message_box.setWindowTitle('Empty Host Name')
+                    message_box.setText('You can\\t assign an empty host name!')
+                    message_box.setIcon(QMessageBox.Icon.Warning)
+                    message_box.addButton(QMessageBox.StandardButton.Ok)
+                    message_box.exec_()
+                if self._peerconn.is_valid_ipv4(self._dialog.QLineEdit_local_address.text()) and self._peerconn._peerdata.local_address != self._dialog.QLineEdit_local_address.text():
                     message_box.setWindowTitle('Changing Address')
                     message_box.setText('If you change your local address all active sockets are going to be removed!')
                     message_box.setIcon(QMessageBox.Icon.Warning)
@@ -379,6 +346,13 @@ class PeerConnGUI:
                         self._model_socket_list.clear()
                         self._model_chat.clear()
                         self._qtimer_update_ui.start(50)
+                else:
+                    message_box = QMessageBox()
+                    message_box.setWindowTitle('Wrong IPv4')
+                    message_box.setText('Check if IP address format is correct.')
+                    message_box.setIcon(QMessageBox.Icon.Warning)
+                    message_box.addButton(QMessageBox.StandardButton.Ok)
+                    message_box.exec_()
                 self._ui.lineEdit_user_hostname.setText(self._peerconn._peerdata.name)
                 self._ui.lineEdit_user_local_address.setText(self._peerconn._peerdata.local_address)
         except Exception as ex:
@@ -393,7 +367,6 @@ class PeerConnGUI:
 
         self._model_chat = QStandardItemModel()
         self._ui.listView_chat.setModel(self._model_chat)
-        self._ui.listView_chat.setItemDelegate(ChatItemDelegate())
         self._peerconn._logger.info(f'UI-{self.set_QListViews.__name__}: Initialized')
 
     def context_menu_active_connections(self, position: QPoint) -> None:
@@ -431,8 +404,8 @@ class PeerConnGUI:
                     self._ui.lineEdit_message.setEnabled(True)
                     self._ui.lineEdit_file_path.setEnabled(True)
                     self._ui.pushButton_send_message.setEnabled(True)
-                    self._ui.pushButton_pick_file.setEnabled(True)
                     self._ui.pushButton_send_file.setEnabled(True)
+                    self._ui.pushButton_pick_file.setEnabled(True)
                 elif self._ui.listView_sockets.selectionModel().hasSelection() == False:
                     self._ui.listView_chat.setEnabled(False)
                     self._ui.lineEdit_message.setEnabled(False)
@@ -440,6 +413,7 @@ class PeerConnGUI:
                     self._ui.pushButton_send_message.setEnabled(False)
                     self._ui.pushButton_pick_file.setEnabled(False)
                     self._ui.pushButton_send_file.setEnabled(False)
+
                 for i in range(0, len(self._peerconn._peersockets)):
                     peersocket_ref = self._peerconn._peersockets[i]
                     if peersocket_ref.servers: # Check if socket is server
@@ -470,6 +444,7 @@ class PeerConnGUI:
 
     def on_connection_selection(self) -> None:
         self._model_chat.clear()
+        self._update_chat = True
 
     def update_chat(self) -> None:
         index = self._ui.listView_sockets.currentIndex()
@@ -480,17 +455,49 @@ class PeerConnGUI:
                 peersocket_ref = self._peerconn.get_socket(peersocket_id)
                 if peersocket_ref != None:
                     history = peersocket_ref.history
-                    if history.new_messages > 0 or self._i_sent_data:
+                    if history.new_messages > 0 or self._update_chat:
                         for i in range(self._model_chat.rowCount(), len(history.messages)):
                                 msg = history.messages[i]
-                                item = QStandardItem()
-                                item.setFlags(item.flags() | Qt.TextInteractionFlag.TextSelectableByMouse | Qt.ItemFlag.ItemIsSelectable)
-                                item.setData(dumps(msg), Qt.ItemDataRole.UserRole + 1)
-                                self._model_chat.appendRow(item)
+                                msg_item = QStandardItem()
+                                if msg.type != None:
+                                    if msg.type == MessageTypes.CONNECTION_ESTABLISHED:
+                                        msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(40, 160, 40))
+                                        msg_item.setForeground(QColor(255, 255, 255))
+                                    elif msg.type == MessageTypes.CONNECTION_LOST:
+                                        msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(160, 40, 40))
+                                        msg_item.setForeground(QColor(255, 255, 255))
+                                    elif msg.type == MessageTypes.ME:
+                                        msg_item.setText(f"|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}| > {msg.content}")
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify)
+                                        msg_item.setBackground(QColor(255, 255, 255))
+                                        msg_item.setForeground(QColor(0, 0, 0))
+                                    elif msg.type == MessageTypes.PEER:
+                                        msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}| > {msg.content}')
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify)
+                                        msg_item.setBackground(QColor(120, 120, 120))
+                                        msg_item.setForeground(QColor(255, 255, 255))
+                                    elif msg.type == MessageTypes.SYSTEM_NOTIFY:
+                                        msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(255, 145, 0))
+                                        msg_item.setForeground(QColor(0, 0, 0))
+                                    elif msg.type == MessageTypes.SYSTEM_WARN:
+                                        msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(100, 0, 250))
+                                        msg_item.setForeground(QColor(255, 255, 255))
+                                self._model_chat.appendRow(msg_item)
+                        last_item_index = self._model_chat.index(self._model_chat.rowCount() - 1, 0)
+                        self._ui.listView_chat.scrollTo(last_item_index)
                         history.new_messages = 0
-                        self._i_sent_data = False
+                        self._update_chat = False
 
     def on_exit(self) -> None:
+        self._qtimer_update_ui.stop()
         self._peerconn.exit()
         sleep(0.5)
         self._peerconn_thread.terminate()
