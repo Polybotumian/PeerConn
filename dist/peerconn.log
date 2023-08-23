@@ -1,0 +1,26 @@
+2023-08-23 15:33:57,861 - INFO - _configure_logging: OK.
+2023-08-23 15:33:57,865 - INFO - get_ipv4_address: Wi-Fi 192.168.1.35.
+2023-08-23 15:33:57,865 - INFO - PeerConn: Initialized.
+2023-08-23 15:33:57,876 - DEBUG - Using proactor: IocpProactor
+2023-08-23 15:33:58,087 - INFO - UI-set_user_data_ui: Set.
+2023-08-23 15:33:58,087 - INFO - UI-set_buttons: Set.
+2023-08-23 15:33:58,088 - INFO - UI-set_QListViews: Initialized
+2023-08-23 15:33:58,088 - INFO - thread_main: Running.
+2023-08-23 15:33:58,088 - INFO - UI-PeerConnGUI: Initialized.
+2023-08-23 15:34:04,671 - INFO - UI-listen_dialog: Executed.
+2023-08-23 15:34:07,515 - INFO - create_peer_socket: c75cdb77-d163-4aa6-8903-3a2f9258f2af
+2023-08-23 15:34:07,515 - INFO - set_peersocket: c75cdb77-d163-4aa6-8903-3a2f9258f2af
+2023-08-23 15:34:07,516 - INFO - thread_main: 1
+2023-08-23 15:34:07,516 - INFO - hm_set_listener: c75cdb77-d163-4aa6-8903-3a2f9258f2af
+2023-08-23 15:34:07,516 - INFO - hm_set_listener: Message server = OK.
+2023-08-23 15:34:07,516 - INFO - hm_set_listener: File server = OK.
+2023-08-23 15:34:28,142 - INFO - thread_main: 0
+2023-08-23 15:34:28,142 - INFO - hm_close: c75cdb77-d163-4aa6-8903-3a2f9258f2af
+2023-08-23 15:34:28,142 - INFO - hm_close: Message server is closed.
+2023-08-23 15:34:28,142 - INFO - hm_close: File server of is closed.
+2023-08-23 15:34:28,142 - INFO - hm_close: Message writer of is closed.
+2023-08-23 15:34:28,142 - INFO - c75cdb77-d163-4aa6-8903-3a2f9258f2af - _server_incomming_files: Disconnected from file socket.
+2023-08-23 15:34:28,142 - INFO - hm_close: File writer of is closed.
+2023-08-23 15:34:28,142 - INFO - hm_exit: Active peersockets = 0
+2023-08-23 15:34:28,142 - INFO - hm_exit: Exiting PeerConn..
+2023-08-23 15:34:29,152 - INFO - UI-on_exit: Executed.

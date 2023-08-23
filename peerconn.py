@@ -362,7 +362,7 @@ class PeerConn:
     async def hm_connect(self, id: str) -> None:
         peersocket_ref = self.get_socket(id)
         if peersocket_ref is not None:
-            self._logger.info(f'{self.hm_connect.__name__}:{id}, {peersocket_ref.peerdata.local_address}: {peersocket_ref.peerdata.msg_port}, {peersocket_ref.peerdata.file_port}')
+            self._logger.info(f'{peersocket_ref.id} - {self.hm_connect.__name__}: {peersocket_ref.peerdata.local_address}: {peersocket_ref.peerdata.msg_port}, {peersocket_ref.peerdata.file_port}')
             try:
                 peersocket_ref.streams = Streams()
                 peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer = await open_connection(
@@ -370,27 +370,20 @@ class PeerConn:
                     peersocket_ref.peerdata.msg_port
                 )
 
-                self._logger.info(f'{self.hm_connect.__name__}: Message server = OK.')
+                self._logger.info(f'{peersocket_ref.id} - {self.hm_connect.__name__}: Message server = OK.')
 
                 peersocket_ref.streams.file_reader, peersocket_ref.streams.file_writer = await open_connection(
                     peersocket_ref.peerdata.local_address,
                     peersocket_ref.peerdata.file_port
                 )
 
-                self._logger.info(f'{self.hm_connect.__name__}: File server = OK.')
+                self._logger.info(f'{peersocket_ref.id} - {self.hm_connect.__name__}: File server = OK.')
 
                 create_task(PeerConn._server_incomming_messages(peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer, peersocket_ref, self._logger))
                 create_task(PeerConn._server_incomming_files(peersocket_ref.streams.file_reader, peersocket_ref.streams.file_writer, peersocket_ref, self._logger))
 
-                # create_task(
-                #     gather(
-                #         PeerConn._server_incomming_messages(peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer, peersocket_ref),
-                #         PeerConn._server_incomming_files(peersocket_ref.streams.file_reader, peersocket_ref.streams.file_writer, peersocket_ref)
-                #     )
-                # )
-
             except Exception as ex:
-                self._logger.error(f'{self.hm_connect.__name__}: {id}, {ex}')
+                self._logger.error(f'{id} - {self.hm_connect.__name__}: {ex}')
 
     async def hm_close_all(self) -> None:
         for peersocket in self._peersockets:
@@ -410,8 +403,9 @@ class PeerConn:
                     peersocket_ref.streams.msg_writer.write(data.encode("utf-8"))
                     peersocket_ref.history.messages.append(Message(self._peerdata.name, data, datetime.now(), type= MessageTypes.ME))
                     await peersocket_ref.streams.msg_writer.drain()
-                    self._logger.info(f'{self.hm_send_message.__name__}: {peersocket_ref.id}')
+                    self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Sent!')
                 else:
+                    self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Can\'t sent!')
                     peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
@@ -423,7 +417,7 @@ class PeerConn:
                     peersocket_ref.history.new_messages += 1
         except ConnectionError as ex:
             await self.close(id)
-            self._logger.error(f'{self.hm_send_message.__name__}: {peersocket_ref.id}, {ex}')
+            self._logger.error(f'{id} - {self.hm_send_message.__name__}: {ex}')
 
     async def hm_send_file(self, id: str, file_path: str) -> None:
         try:
@@ -447,7 +441,6 @@ class PeerConn:
                         peersocket_ref.history.new_messages += 1
                         peersocket_ref.streams.file_writer.write(serialized_file_data)
                         peersocket_ref.streams.file_writer.write(self._file_delimiter)
-                        # await asyncio_sleep(self._SLEEP_TIME)
                         with open(file_path, 'rb') as file:
                             while True:
                                 chunk = file.read(4096)
@@ -455,7 +448,7 @@ class PeerConn:
                                     break
                                 peersocket_ref.streams.file_writer.write(chunk)
                                 await peersocket_ref.streams.file_writer.drain()
-                        self._logger.info(f'{self.hm_send_file.__name__}: Sent to {peersocket_ref.id}')
+                        self._logger.info(f'{peersocket_ref.id} - {self.hm_send_file.__name__}: Sent!')
                         peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
@@ -476,9 +469,9 @@ class PeerConn:
                         )
                         peersocket_ref.history.new_messages += 1
             else:
-                self._logger.warning(f'{self.hm_send_file.__name__}: File path is empty!')
+                self._logger.warning(f'{id} - {self.hm_send_file.__name__}: File path is empty!')
         except Exception as ex:
-            self._logger.error(f'{self.hm_send_file.__name__}: {peersocket_ref.id}, {ex}')
+            self._logger.error(f'{id} - {self.hm_send_file.__name__}: {peersocket_ref.id}, {ex}')
 
     def _configure_logging(self) -> None:
         with open(self.log_filename, "w") as file:
