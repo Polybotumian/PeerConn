@@ -1,4 +1,4 @@
-# PeerConn
+# :electric_plug:PeerConn
  Peer-to-peer socket desktop application for Windows OS.
 # :question:About
 PeerConn is a peer-to-peer socket chat desktop application. It allows you to create multiple sockets to communicate with other sockets. It aims to manage communication and data transfer between computers with a user-friendly graphical interface.
@@ -11,8 +11,8 @@ For the sake of integration of PeerConn with PyQt5 and the performance of the ap
 
 It has a basic logging system that logs actions and errors in the program to a file with the extension "log".
 
-Please report any bugs you have found when using PeerConn. I would also be grateful if you could let me know what you think is missing from PeerConn.
-# :small_red_triangle_down:Guide
+**Please report any bugs you have found when using PeerConn. I would also be grateful if you could let me know what you think is missing from PeerConn.**
+# :closed_book:Guide
 #### Host Name and Local Address:
 PeerConn automatically assigns your computer name as "Host Name" and finds your IPv4 to assign it as "Local Address". The most important thing here is your Local Address, which you can use to set up listener peer sockets for incoming connections, or to connect to another computer using its IPv4.
 
@@ -28,7 +28,7 @@ This type of peersocket is for incoming connections. A server peersocket has a d
 #### Client Peersocket:
 This type of peersocket is for connecting to a server peersocket. A client peersocket has an up arrow icon to indicate that it is a client.
 
-### Peersocket icon colours:
+### :small_red_triangle_down:Peersocket icon colours:
 - :yellow_circle:Yellow: Indicates that it is active and waiting for a connection.
 - :green_circle:Green: Indicates that it is active and connected.
 - :red_circle:Red: Indicates inactive and connection lost.
