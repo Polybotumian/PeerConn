@@ -33,7 +33,7 @@ This type of peersocket is for connecting to a server peersocket. A client peers
 - :green_circle:Green: Indicates that it is active and connected.
 - :red_circle:Red: Indicates inactive and connection lost.
 
-### To send multiple files
+### To Send Multiple Files
 You should zip your files and then send the zip file.
-### To connect over different networks
+### To Connect Over Different Networks
 You should use 3rd party tools. (e.g. Localtonet)
