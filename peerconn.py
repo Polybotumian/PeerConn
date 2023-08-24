@@ -188,12 +188,12 @@ class PeerConn:
 
             while peersocket.msg_comm_connected:
                 try:
-                    data = await reader.read(2048)
+                    data = await peersocket.streams.msg_reader.read(2048)
                     if data:
                         peersocket.history.messages.append(
                             Message(
                                 sender= peersocket.peerdata.name,
-                                content= data.decode("utf-8"),
+                                content= data.decode(),
                                 date_time= datetime.now(),
                                 type= MessageTypes.PEER
                             )
@@ -274,7 +274,8 @@ class PeerConn:
 
             while peersocket.file_comm_connected:
                 try:
-                    serialized_data = await reader.readuntil(PeerConn._file_delimiter)
+                    serialized_data = await peersocket.streams.file_reader.readuntil(PeerConn._file_delimiter)
+                    peersocket.in_file_transaction = True
                     file_data:FileData = loads(serialized_data.removesuffix(PeerConn._file_delimiter))
                     logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Receiving a file: {file_data}')
                     todays_download_path = path.join(PeerConn._DOWNLOADS_FOLDER, str(datetime.now().date()))
@@ -293,10 +294,10 @@ class PeerConn:
                         peersocket.history.new_messages += 1
                         readed_data_size = 0
                         while True:
-                            data = await reader.read(4096)
+                            data = await peersocket.streams.file_reader.read(4096)
                             readed_data_size += len(data)
                             received_file.write(data)
-                            if readed_data_size == file_data.size:
+                            if readed_data_size >= file_data.size:
                                 logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
                                 peersocket.history.messages.append(
                                     Message(
@@ -329,6 +330,8 @@ class PeerConn:
                 except Exception as ex:
                     logger.error(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: {ex}')
                     break
+                finally:
+                    peersocket.in_file_transaction = False
         finally:
             notify: str = None
             if peersocket.file_comm_connected:
@@ -400,7 +403,7 @@ class PeerConn:
             peersocket_ref = self.get_socket(id)
             if peersocket_ref != None:
                 if peersocket_ref.streams.msg_writer != None:
-                    peersocket_ref.streams.msg_writer.write(data.encode("utf-8"))
+                    peersocket_ref.streams.msg_writer.write(data.encode())
                     peersocket_ref.history.messages.append(Message(self._peerdata.name, data, datetime.now(), type= MessageTypes.ME))
                     await peersocket_ref.streams.msg_writer.drain()
                     self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Sent!')
@@ -423,8 +426,9 @@ class PeerConn:
         try:
             if file_path != '':
                 peersocket_ref = self.get_socket(id)
-                if peersocket_ref != None:
+                if peersocket_ref != None and not peersocket_ref.in_file_transaction:
                     if peersocket_ref.streams.file_writer != None:
+                        peersocket_ref.in_file_transaction = True
                         file_name_without_extension, file_extension = path.splitext(file_path)
                         file_name_without_extension = file_name_without_extension.split('/')[-1]
                         file_data = FileData(name= file_name_without_extension, extension= file_extension, size= path.getsize(file_path))
@@ -442,12 +446,16 @@ class PeerConn:
                         peersocket_ref.streams.file_writer.write(serialized_file_data)
                         peersocket_ref.streams.file_writer.write(self._file_delimiter)
                         with open(file_path, 'rb') as file:
+                            total_write = 0
                             while True:
                                 chunk = file.read(4096)
                                 if not chunk:
+                                    peersocket_ref.file_percentage = None
                                     break
                                 peersocket_ref.streams.file_writer.write(chunk)
                                 await peersocket_ref.streams.file_writer.drain()
+                                total_write += len(chunk)
+                                peersocket_ref.file_percentage = round((total_write * 100) / file_data.size)
                         self._logger.info(f'{peersocket_ref.id} - {self.hm_send_file.__name__}: Sent!')
                         peersocket_ref.history.messages.append(
                             Message(
@@ -472,6 +480,8 @@ class PeerConn:
                 self._logger.warning(f'{id} - {self.hm_send_file.__name__}: File path is empty!')
         except Exception as ex:
             self._logger.error(f'{id} - {self.hm_send_file.__name__}: {peersocket_ref.id}, {ex}')
+        finally:
+            peersocket_ref.in_file_transaction = False
 
     def _configure_logging(self) -> None:
         with open(self.log_filename, "w") as file:

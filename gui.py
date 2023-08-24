@@ -72,7 +72,7 @@ class Ui_MainWindow(object):
         self.lineEdit_message.setGeometry(QtCore.QRect(260, 300, 501, 21))
         self.lineEdit_message.setObjectName("lineEdit_message")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.page_main)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(350, 360, 321, 31))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(260, 360, 321, 31))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout_chat_buttons = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout_chat_buttons.setContentsMargins(0, 0, 0, 0)
@@ -101,84 +101,33 @@ class Ui_MainWindow(object):
         self.lineEdit_file_path = QtWidgets.QLineEdit(self.page_main)
         self.lineEdit_file_path.setGeometry(QtCore.QRect(260, 330, 501, 21))
         self.lineEdit_file_path.setObjectName("lineEdit_file_path")
+        self.progressBar_file = QtWidgets.QProgressBar(self.page_main)
+        self.progressBar_file.setEnabled(True)
+        self.progressBar_file.setGeometry(QtCore.QRect(590, 370, 171, 10))
+        self.progressBar_file.setProperty("value", 0)
+        self.progressBar_file.setObjectName("progressBar_file")
         self.stackedWidget.addWidget(self.page_main)
         self.page_help = QtWidgets.QWidget()
         self.page_help.setObjectName("page_help")
         self.pushButton_guide_back = QtWidgets.QPushButton(self.page_help)
         self.pushButton_guide_back.setGeometry(QtCore.QRect(340, 370, 75, 23))
         self.pushButton_guide_back.setObjectName("pushButton_guide_back")
-        self.plainTextEdit_guide = QtWidgets.QPlainTextEdit(self.page_help)
-        self.plainTextEdit_guide.setGeometry(QtCore.QRect(10, 30, 751, 331))
-        self.plainTextEdit_guide.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.plainTextEdit_guide.setAcceptDrops(False)
-        self.plainTextEdit_guide.setStyleSheet("")
-        self.plainTextEdit_guide.setInputMethodHints(QtCore.Qt.ImhNone)
-        self.plainTextEdit_guide.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.plainTextEdit_guide.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.plainTextEdit_guide.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.plainTextEdit_guide.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.plainTextEdit_guide.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
-        self.plainTextEdit_guide.setDocumentTitle("")
-        self.plainTextEdit_guide.setUndoRedoEnabled(False)
-        self.plainTextEdit_guide.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
-        self.plainTextEdit_guide.setReadOnly(True)
-        self.plainTextEdit_guide.setOverwriteMode(False)
-        self.plainTextEdit_guide.setBackgroundVisible(False)
-        self.plainTextEdit_guide.setCenterOnScroll(False)
-        self.plainTextEdit_guide.setObjectName("plainTextEdit_guide")
-        self.label_about_2 = QtWidgets.QLabel(self.page_help)
-        self.label_about_2.setGeometry(QtCore.QRect(10, 10, 31, 16))
-        self.label_about_2.setObjectName("label_about_2")
+        self.textEdit_guide = QtWidgets.QTextEdit(self.page_help)
+        self.textEdit_guide.setGeometry(QtCore.QRect(10, 10, 751, 351))
+        self.textEdit_guide.setReadOnly(True)
+        self.textEdit_guide.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
+        self.textEdit_guide.setObjectName("textEdit_guide")
         self.stackedWidget.addWidget(self.page_help)
         self.page_about = QtWidgets.QWidget()
         self.page_about.setObjectName("page_about")
-        self.plainTextEdit_about = QtWidgets.QPlainTextEdit(self.page_about)
-        self.plainTextEdit_about.setGeometry(QtCore.QRect(10, 30, 751, 191))
-        self.plainTextEdit_about.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.plainTextEdit_about.setAcceptDrops(False)
-        self.plainTextEdit_about.setStyleSheet("")
-        self.plainTextEdit_about.setInputMethodHints(QtCore.Qt.ImhNone)
-        self.plainTextEdit_about.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.plainTextEdit_about.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.plainTextEdit_about.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.plainTextEdit_about.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.plainTextEdit_about.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
-        self.plainTextEdit_about.setDocumentTitle("")
-        self.plainTextEdit_about.setUndoRedoEnabled(False)
-        self.plainTextEdit_about.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
-        self.plainTextEdit_about.setReadOnly(True)
-        self.plainTextEdit_about.setOverwriteMode(False)
-        self.plainTextEdit_about.setBackgroundVisible(False)
-        self.plainTextEdit_about.setCenterOnScroll(False)
-        self.plainTextEdit_about.setObjectName("plainTextEdit_about")
-        self.label_about = QtWidgets.QLabel(self.page_about)
-        self.label_about.setGeometry(QtCore.QRect(10, 10, 81, 16))
-        self.label_about.setObjectName("label_about")
-        self.label_developer_request = QtWidgets.QLabel(self.page_about)
-        self.label_developer_request.setGeometry(QtCore.QRect(10, 240, 91, 16))
-        self.label_developer_request.setObjectName("label_developer_request")
-        self.plainTextEdit_developer_request = QtWidgets.QPlainTextEdit(self.page_about)
-        self.plainTextEdit_developer_request.setGeometry(QtCore.QRect(10, 260, 751, 61))
-        self.plainTextEdit_developer_request.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.plainTextEdit_developer_request.setAcceptDrops(False)
-        self.plainTextEdit_developer_request.setStyleSheet("")
-        self.plainTextEdit_developer_request.setInputMethodHints(QtCore.Qt.ImhNone)
-        self.plainTextEdit_developer_request.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.plainTextEdit_developer_request.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.plainTextEdit_developer_request.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.plainTextEdit_developer_request.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.plainTextEdit_developer_request.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
-        self.plainTextEdit_developer_request.setDocumentTitle("")
-        self.plainTextEdit_developer_request.setUndoRedoEnabled(False)
-        self.plainTextEdit_developer_request.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
-        self.plainTextEdit_developer_request.setReadOnly(True)
-        self.plainTextEdit_developer_request.setOverwriteMode(False)
-        self.plainTextEdit_developer_request.setBackgroundVisible(False)
-        self.plainTextEdit_developer_request.setCenterOnScroll(False)
-        self.plainTextEdit_developer_request.setObjectName("plainTextEdit_developer_request")
         self.pushButton_about_back = QtWidgets.QPushButton(self.page_about)
         self.pushButton_about_back.setGeometry(QtCore.QRect(340, 370, 75, 23))
         self.pushButton_about_back.setObjectName("pushButton_about_back")
+        self.textEdit_about = QtWidgets.QTextEdit(self.page_about)
+        self.textEdit_about.setGeometry(QtCore.QRect(10, 10, 751, 351))
+        self.textEdit_about.setReadOnly(True)
+        self.textEdit_about.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
+        self.textEdit_about.setObjectName("textEdit_about")
         self.stackedWidget.addWidget(self.page_about)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -237,43 +186,53 @@ class Ui_MainWindow(object):
         self.lineEdit_file_path.setToolTip(_translate("MainWindow", "Message box. Enter key is the hot key for sending message."))
         self.lineEdit_file_path.setPlaceholderText(_translate("MainWindow", "File path"))
         self.pushButton_guide_back.setText(_translate("MainWindow", "Back"))
-        self.plainTextEdit_guide.setPlainText(_translate("MainWindow", "Host Name and Local Address:\n"
-"PeerConn automatically assigns your computer name as \"Host Name\" and finds your IPv4 to assign it as \"Local Address\". The most important thing here is your Local Address, which you can use to set up listener peer sockets for incoming connections, or to connect to another computer using its IPv4.\n"
-"\n"
-"Listen and Connect buttons:\n"
-"These buttons allow you to create 2 different types of peersockets, these are server and client peersockets. When you create a peersocket it will appear in a list on the left hand side of the window.\n"
-"\n"
-"Peersockets:\n"
-"The left pane of the window is a list of peersockets. You can select a peersocket by clicking on it. When a socket is selected, you can only interact with that peersocket. You can also change the name of the peersocket from the context menu that opens when you right click on it.\n"
-"\n"
-"Server Peersocket:\n"
-"This type of peersocket is for incoming connections. A server peersocket has a down arrow icon to indicate that it is a server.\n"
-"\n"
-"Client Peersocket:\n"
-"This type of peersocket is for connecting to a server peersocket. A client peersocket has an up arrow icon to indicate that it is a client.\n"
-"\n"
-"Peersocket icon colours:\n"
-"       Yellow: Indicates that it is active and waiting for a connection.\n"
-"       Green: Indicates that it is active and connected.\n"
-"       Red: Indicates inactive and connection lost.\n"
-"\n"
-"To connect over different networks you should use 3rd party tools. (e.g. Localtonet)"))
-        self.label_about_2.setText(_translate("MainWindow", "Guide"))
-        self.plainTextEdit_about.setPlainText(_translate("MainWindow", "PeerConn is a peer-to-peer socket chat desktop application. It allows you to create multiple sockets to communicate with other sockets. It aims to manage communication and data transfer between computers with a user-friendly graphical interface.\n"
-"\n"
-"It is developed using Python and many libraries used in development such as PyQt5, asyncio, psutil, logging. \n"
-"\n"
-"Due to the handling of multiple sockets and data transfer processes, PeerConn has to work in an async loop. For this reason there are 2 threads that this program has to use. The main thread is for the PyQt5 interface and the other is for PeerConn itself. \n"
-"\n"
-"For the sake of integration of PeerConn with PyQt5 and the performance of the application and the nature of async programming, PeerConn has a main method that remains a loop that handles runtime transactions and waits for runtime commands via event. This way all tasks are created in the same loop and are able to execute certain methods in a sync code and it also keeps async sockets alive.\n"
-"\n"
-"It has a basic logging system that logs actions and errors in the program to a file with the extension \"log\"."))
-        self.label_about.setText(_translate("MainWindow", "About PeerConn"))
-        self.label_developer_request.setText(_translate("MainWindow", "Developer Request"))
-        self.plainTextEdit_developer_request.setPlainText(_translate("MainWindow", "Please report any bugs you have found when using PeerConn. I would also be grateful if you could let me know what you think is missing from PeerConn.\n"
-"\n"
-"github.com/Polybotumian"))
+        self.textEdit_guide.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Host Name and Local Address:</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">PeerConn automatically assigns your computer name as &quot;Host Name&quot; and finds your IPv4 to assign it as &quot;Local Address&quot;. The most important thing here is your Local Address, which you can use to set up listener peer sockets for incoming connections, or to connect to another computer using its IPv4.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Listen and Connect buttons:</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">These buttons allow you to create 2 different types of peersockets, these are server and client peersockets. When you create a peersocket it will appear in a list on the left hand side of the window.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Peersockets:</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">The left pane of the window is a list of peersockets. You can select a peersocket by clicking on it. When a socket is selected, you can only interact with that peersocket. You can also change the name of the peersocket from the context menu that opens when you right click on it.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Server Peersocket:</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">This type of peersocket is for incoming connections. A server peersocket has a down arrow icon to indicate that it is a server.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Client Peersocket:</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">This type of peersocket is for connecting to a server peersocket. A client peersocket has an up arrow icon to indicate that it is a client.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Peersocket icon colours:</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">       </span><span style=\" font-size:10pt; color:#ffe100;\">Yellow</span><span style=\" font-size:10pt;\">: Indicates that it is active and waiting for a connection.</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">       </span><span style=\" font-size:10pt; color:#2fff00;\">Green</span><span style=\" font-size:10pt;\">: Indicates that it is active and connected.</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">       </span><span style=\" font-size:10pt; color:#aa0000;\">Red</span><span style=\" font-size:10pt;\">: Indicates inactive and connection lost.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">To send multiple files</span><span style=\" font-size:10pt;\">, you should zip your files and then send the zip file.</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">To connect over different networks</span><span style=\" font-size:10pt;\"> you should use 3rd party tools. (e.g. Localtonet)</span></p></body></html>"))
         self.pushButton_about_back.setText(_translate("MainWindow", "Back"))
+        self.textEdit_about.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">About PeerConn</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">PeerConn is a peer-to-peer socket chat desktop application. It allows you to create multiple sockets to communicate with other sockets. It aims to manage communication and data transfer between computers with a user-friendly graphical interface.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">It is developed using Python and many libraries used in development such as PyQt5, asyncio, psutil, logging. </span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Due to the handling of multiple sockets and data transfer processes, PeerConn has to work in an async loop. For this reason there are 2 threads that this program has to use. The main thread is for the PyQt5 interface and the other is for PeerConn itself. </span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">For the sake of integration of PeerConn with PyQt5 and the performance of the application and the nature of async programming, PeerConn has a main method that remains a loop that handles runtime transactions and waits for runtime commands via event. This way all tasks are created in the same loop and are able to execute certain methods in a sync code and it also keeps async sockets alive.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">It has a basic logging system that logs actions and errors in the program to a file with the extension &quot;log&quot;.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Developer Request</span></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Please report any bugs you have found when using PeerConn. I would also be grateful if you could let me know what you think is missing from PeerConn.</span></p>\n"
+"<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"github.com/Polybotumian/PeerConn\"><span style=\" font-size:10pt; text-decoration: underline; color:#0000ff;\">PeerConn GitHub Page</span></a></p>\n"
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"github.com/Polybotumian\"><span style=\" font-size:10pt; text-decoration: underline; color:#0000ff;\">My GitHub</span></a></p></body></html>"))
         self.menuAbout.setTitle(_translate("MainWindow", "Info"))
         self.menuOptions.setTitle(_translate("MainWindow", "Options"))
         self.actionPreferences.setText(_translate("MainWindow", "Theme"))

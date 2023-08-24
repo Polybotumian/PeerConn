@@ -69,3 +69,5 @@ class PeerSocket:
     peerdata: PeerData | None = None      # Peer data of this computer
     msg_comm_connected: bool = False      # Indicates whether the message communication established
     file_comm_connected: bool = False     # Indicates whether the file communication established
+    in_file_transaction: bool = False
+    file_percentage: int | None = None

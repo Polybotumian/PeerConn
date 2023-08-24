@@ -25,7 +25,7 @@ class DialogListen(QDialog):
     def __init__(self, local_address: str) -> None:
         super().__init__()
         self.setWindowTitle('Create Listener')
-        self.setFixedSize(240, 240)
+        self.setFixedSize(240, 180)
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit()
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
@@ -51,7 +51,7 @@ class DialogConnect(QDialog):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle('Create Connection')
-        self.setFixedSize(240, 240)
+        self.setFixedSize(240, 180)
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit()
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
@@ -78,7 +78,7 @@ class DialogEditConnectionItem(QDialog):
         super().__init__()
         # self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle(f'Edit {peerdata.name}')
-        self.setFixedSize(240, 240)
+        self.setFixedSize(240, 180)
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit(peerdata.name)
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
@@ -119,7 +119,7 @@ class DialogEditMyData(QDialog):
 
 class PeerConnGUI:
     # Main Window Constants
-    MWINDOW_TITLE: str = 'PeerConn - GUI'
+    MWINDOW_TITLE: str = 'PeerConn - GUI (v23824)'
     # Properties
     _peerconn: PeerConn | None
     _peerconn_thread: PeerConnThread | None
@@ -168,8 +168,10 @@ class PeerConnGUI:
         self._main_window.setWindowIcon(QIcon(path.join(self.ICON_FOLDER,'window/peerconn.png')))
         self.set_user_data_ui()
         self._ui.listView_chat.setEnabled(False)
+        self._ui.lineEdit_message.setMaxLength(2048)
         self._ui.lineEdit_message.returnPressed.connect(self.send_message)
         self._ui.lineEdit_message.setEnabled(False)
+        self._ui.progressBar_file.setEnabled(False)
         self.set_buttons()
         self.set_QListViews()
         self.set_toolbar_actions()
@@ -236,9 +238,15 @@ class PeerConnGUI:
     def pick_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.Option.ReadOnly
-        file_path, _ = QFileDialog.getOpenFileName(self._main_window, "Select File", "", "All Files (*)", options= options)
-        if file_path:
-            self._ui.lineEdit_file_path.setText(file_path)
+        file_paths, _ = QFileDialog.getOpenFileNames(
+            self._main_window,
+            "Select Files",
+            "",
+            "All Files (*);;Text Files (*.txt);;Image Files (*.png *.jpg *.bmp)",
+            options=options,
+        )
+        if file_paths:
+            self._ui.lineEdit_file_path.setText(','.join([file_path for file_path in file_paths]))
 
     def listen_dialog(self) -> None:
         try:
@@ -420,6 +428,17 @@ class PeerConnGUI:
                         if (peersocket_ref.msg_comm_connected and
                             peersocket_ref.file_comm_connected):
                             item_list[i].setIcon(self.icon_server_active)
+                            if (not peersocket_ref.in_file_transaction):
+                                self._ui.pushButton_pick_file.setEnabled(True)
+                                self._ui.pushButton_send_file.setEnabled(True)
+                                self._ui.progressBar_file.setEnabled(False)
+                                self._ui.progressBar_file.setValue(0)
+                            else:
+                                self._ui.pushButton_pick_file.setEnabled(False)
+                                self._ui.pushButton_send_file.setEnabled(False)
+                                self._ui.progressBar_file.setEnabled(True)
+                                self._ui.progressBar_file.setValue(peersocket_ref.file_percentage)
+                            
                         elif (not peersocket_ref.servers.msg_server and
                             not peersocket_ref.servers.file_server and
                             not peersocket_ref.msg_comm_connected and
@@ -472,12 +491,12 @@ class PeerConnGUI:
                                     elif msg.type == MessageTypes.ME:
                                         msg_item.setText(f"|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}| > {msg.content}")
                                         msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify)
-                                        msg_item.setBackground(QColor(255, 255, 255))
+                                        msg_item.setBackground(QColor(130, 150, 220))
                                         msg_item.setForeground(QColor(0, 0, 0))
                                     elif msg.type == MessageTypes.PEER:
                                         msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}| > {msg.content}')
                                         msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify)
-                                        msg_item.setBackground(QColor(120, 120, 120))
+                                        msg_item.setBackground(QColor(80, 100, 170))
                                         msg_item.setForeground(QColor(255, 255, 255))
                                     elif msg.type == MessageTypes.SYSTEM_NOTIFY:
                                         msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
