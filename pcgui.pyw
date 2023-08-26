@@ -238,15 +238,9 @@ class PeerConnGUI:
     def pick_file(self):
         options = QFileDialog.Options()
         options |= QFileDialog.Option.ReadOnly
-        file_paths, _ = QFileDialog.getOpenFileNames(
-            self._main_window,
-            "Select Files",
-            "",
-            "All Files (*);;Text Files (*.txt);;Image Files (*.png *.jpg *.bmp)",
-            options=options,
-        )
-        if file_paths:
-            self._ui.lineEdit_file_path.setText(','.join([file_path for file_path in file_paths]))
+        file_path, _ = QFileDialog.getOpenFileName(self._main_window, "Select File", "", "All Files (*)", options= options)
+        if file_path:
+            self._ui.lineEdit_file_path.setText(file_path)
 
     def listen_dialog(self) -> None:
         try:
