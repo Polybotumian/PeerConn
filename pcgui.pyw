@@ -1,10 +1,10 @@
 from gui import Ui_MainWindow
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMenu, QAction, QDialog, QLabel, QFormLayout, 
                              QLineEdit, QMessageBox, QFileDialog, QSpinBox)
-from PyQt5.QtCore import Qt, QPoint, QThread, pyqtSignal, QTimer, QSize
+from PyQt5.QtCore import Qt, QPoint, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QColor, QIcon, QStandardItemModel, QStandardItem
 from sys import argv as sys_argv, exit as sys_exit
-from peerconn import PeerConn, PeerData, Message, MessageTypes
+from peerconn import PeerConn, PeerData, MessageTypes, Message
 from asyncio import run as async_run
 from time import sleep
 from os import path
@@ -149,7 +149,7 @@ class PeerConnGUI:
         self._peerconn_thread.start()
         self._qtimer_update_ui = QTimer()
         self._qtimer_update_ui.timeout.connect(self.update_ui)
-        self._qtimer_update_ui.start(50)
+        self._qtimer_update_ui.start(250)
         self.set_ui()
         self._peerconn._logger.info(f'UI-{PeerConnGUI.__name__}: Initialized.')
 
@@ -417,21 +417,11 @@ class PeerConnGUI:
 
                 for i in range(0, len(self._peerconn._peersockets)):
                     peersocket_ref = self._peerconn._peersockets[i]
+                    
                     if peersocket_ref.servers: # Check if socket is server
-
                         if (peersocket_ref.msg_comm_connected and
                             peersocket_ref.file_comm_connected):
                             item_list[i].setIcon(self.icon_server_active)
-                            if (not peersocket_ref.in_file_transaction):
-                                self._ui.pushButton_pick_file.setEnabled(True)
-                                self._ui.pushButton_send_file.setEnabled(True)
-                                self._ui.progressBar_file.setEnabled(False)
-                                self._ui.progressBar_file.setValue(0)
-                            else:
-                                self._ui.pushButton_pick_file.setEnabled(False)
-                                self._ui.pushButton_send_file.setEnabled(False)
-                                self._ui.progressBar_file.setEnabled(True)
-                                self._ui.progressBar_file.setValue(peersocket_ref.file_percentage)
                             
                         elif (not peersocket_ref.servers.msg_server and
                             not peersocket_ref.servers.file_server and
@@ -467,6 +457,16 @@ class PeerConnGUI:
                 peersocket_ref = self._peerconn.get_socket(peersocket_id)
                 if peersocket_ref != None:
                     history = peersocket_ref.history
+                    if peersocket_ref.in_file_transaction == False:
+                                self._ui.pushButton_pick_file.setEnabled(True)
+                                self._ui.pushButton_send_file.setEnabled(True)
+                                self._ui.progressBar_file.setEnabled(False)
+                                self._ui.progressBar_file.setValue(0)
+                    else:
+                        self._ui.pushButton_pick_file.setEnabled(False)
+                        self._ui.pushButton_send_file.setEnabled(False)
+                        self._ui.progressBar_file.setEnabled(True)
+                        self._ui.progressBar_file.setValue(peersocket_ref.file_percentage)
                     if history.new_messages > 0 or self._update_chat:
                         for i in range(self._model_chat.rowCount(), len(history.messages)):
                                 msg = history.messages[i]
@@ -492,11 +492,16 @@ class PeerConnGUI:
                                         msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify)
                                         msg_item.setBackground(QColor(80, 100, 170))
                                         msg_item.setForeground(QColor(255, 255, 255))
-                                    elif msg.type == MessageTypes.SYSTEM_NOTIFY:
+                                    elif msg.type == MessageTypes.FILE_NOTIFY_0:
                                         msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
                                         msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                                         msg_item.setBackground(QColor(255, 145, 0))
                                         msg_item.setForeground(QColor(0, 0, 0))
+                                    elif msg.type == MessageTypes.FILE_NOTIFY_1:
+                                        msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(180, 100, 0))
+                                        msg_item.setForeground(QColor(255, 255, 255))
                                     elif msg.type == MessageTypes.SYSTEM_WARN:
                                         msg_item.setText(f'|{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}|\n{msg.content}')
                                         msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)

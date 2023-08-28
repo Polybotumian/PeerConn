@@ -1,6 +1,6 @@
-from models import StreamReader, StreamWriter, datetime, ServerResponses, PeerData, Message, History, Servers, Streams, PeerSocket, dataclass, FileData, MessageTypes
+from models import StreamReader, StreamWriter, datetime, PeerData, Message, History, Servers, Streams, PeerSocket, dataclass, FileData, MessageTypes
 from uuid import uuid4
-from asyncio import start_server, sleep as asyncio_sleep, open_connection, create_task, CancelledError, IncompleteReadError, AbstractEventLoop, get_running_loop, Event, Queue, gather
+from asyncio import start_server, open_connection, create_task, CancelledError, IncompleteReadError, AbstractEventLoop, get_running_loop, Event, Queue
 from socket import gethostname, AF_INET
 from typing import List
 from pickle import dumps, loads
@@ -261,6 +261,7 @@ class PeerConn:
             peersocket.streams.file_reader = reader
             peersocket.streams.file_writer = writer
             peersocket.file_comm_connected = True
+            peersocket.file_percentage = 0
 
             peersocket.history.messages.append(
                         Message(
@@ -286,25 +287,26 @@ class PeerConn:
                         peersocket.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
-                                content= f'{peersocket.peerdata.name} is sending you {file_data.name}{file_data.extension}, {file_data.size}.',
+                                content= f'{peersocket.peerdata.name} is sending you [{file_data.name}{file_data.extension}, {file_data.size}].',
                                 date_time= datetime.now(),
-                                type= MessageTypes.SYSTEM_NOTIFY
+                                type= MessageTypes.FILE_NOTIFY_0
                             )
                         )
                         peersocket.history.new_messages += 1
                         readed_data_size = 0
                         while True:
                             data = await peersocket.streams.file_reader.read(4096)
-                            readed_data_size += len(data)
                             received_file.write(data)
+                            readed_data_size += len(data)
+                            peersocket.file_percentage = round((readed_data_size * 100) / file_data.size)
                             if readed_data_size >= file_data.size:
                                 logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
                                 peersocket.history.messages.append(
                                     Message(
                                         sender= PeerConn.__name__,
-                                        content= f'{file_data.name}{file_data.extension} is completely received! Received file size = {readed_data_size}.',
+                                        content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is completely received!.',
                                         date_time= datetime.now(),
-                                        type= MessageTypes.SYSTEM_NOTIFY
+                                        type= MessageTypes.FILE_NOTIFY_1
                                     )
                                 )
                                 peersocket.history.new_messages += 1
@@ -437,9 +439,9 @@ class PeerConn:
                         peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
-                                content= f'Sending ({file_data.name}{file_data.extension}, {file_data.size}) to {peersocket_ref.peerdata.name}.',
+                                content= f'Sending [{file_data.name}{file_data.extension}, {file_data.size}] to {peersocket_ref.peerdata.name}.',
                                 date_time= datetime.now(),
-                                type= MessageTypes.SYSTEM_NOTIFY
+                                type= MessageTypes.FILE_NOTIFY_0
                             )
                         )
                         peersocket_ref.history.new_messages += 1
@@ -447,10 +449,12 @@ class PeerConn:
                         peersocket_ref.streams.file_writer.write(self._file_delimiter)
                         with open(file_path, 'rb') as file:
                             total_write = 0
+                            peersocket_ref.in_file_transaction = True
                             while True:
                                 chunk = file.read(4096)
                                 if not chunk:
-                                    peersocket_ref.file_percentage = None
+                                    peersocket_ref.file_percentage = 0
+                                    peersocket_ref.in_file_transaction = False
                                     break
                                 peersocket_ref.streams.file_writer.write(chunk)
                                 await peersocket_ref.streams.file_writer.drain()
@@ -460,9 +464,9 @@ class PeerConn:
                         peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
-                                content= f'{file_data.name}{file_data.extension} is sent to {peersocket_ref.peerdata.name}!',
+                                content= f'[{file_data.name}{file_data.extension}] is sent to {peersocket_ref.peerdata.name}!',
                                 date_time= datetime.now(),
-                                type= MessageTypes.SYSTEM_NOTIFY
+                                type= MessageTypes.FILE_NOTIFY_1
                             )
                         )
                         peersocket_ref.history.new_messages += 1

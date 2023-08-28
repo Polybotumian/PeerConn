@@ -4,18 +4,14 @@ from asyncio.streams import StreamReader, StreamWriter
 from datetime import datetime
 from typing import List
 
-class ServerResponses:
-    MSG: str = 'M3554G3_R3513V3D'
-    FILE_CHUNK: str = 'CHUNK_R3513V3D'
-    FILE: str = 'F1L3_R3513V3D'
-
 class MessageTypes:
     ME: int = 0
     PEER: int = 1
     CONNECTION_ESTABLISHED: int = 2
     CONNECTION_LOST: int = 3
-    SYSTEM_NOTIFY: int = 4
-    SYSTEM_WARN: int = 5
+    FILE_NOTIFY_0: int = 4
+    FILE_NOTIFY_1: int = 5
+    SYSTEM_WARN: int = 6
 
 # Data class to store peer connection details
 @dataclass
