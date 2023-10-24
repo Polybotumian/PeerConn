@@ -32,7 +32,7 @@ class Ui_MainWindow(object):
         self.page_main = QtWidgets.QWidget()
         self.page_main.setObjectName("page_main")
         self.formLayoutWidget_2 = QtWidgets.QWidget(self.page_main)
-        self.formLayoutWidget_2.setGeometry(QtCore.QRect(10, 10, 231, 51))
+        self.formLayoutWidget_2.setGeometry(QtCore.QRect(10, 10, 231, 57))
         self.formLayoutWidget_2.setObjectName("formLayoutWidget_2")
         self.formLayout_user_peerdata = QtWidgets.QFormLayout(self.formLayoutWidget_2)
         self.formLayout_user_peerdata.setContentsMargins(0, 0, 0, 0)
@@ -131,7 +131,7 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.page_about)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
         self.menubar.setObjectName("menubar")
         self.menuAbout = QtWidgets.QMenu(self.menubar)
         self.menuAbout.setObjectName("menuAbout")
@@ -149,12 +149,16 @@ class Ui_MainWindow(object):
         self.actionAbout.setObjectName("actionAbout")
         self.actionChange_My_Data = QtWidgets.QAction(MainWindow)
         self.actionChange_My_Data.setObjectName("actionChange_My_Data")
+        self.actionDownload_Dir = QtWidgets.QAction(MainWindow)
+        self.actionDownload_Dir.setObjectName("actionDownload_Dir")
         self.menuAbout.addAction(self.actionHelp)
         self.menuAbout.addSeparator()
         self.menuAbout.addAction(self.actionAbout)
         self.menuOptions.addAction(self.actionPreferences)
         self.menuOptions.addSeparator()
         self.menuOptions.addAction(self.actionChange_My_Data)
+        self.menuOptions.addSeparator()
+        self.menuOptions.addAction(self.actionDownload_Dir)
         self.menubar.addAction(self.menuOptions.menuAction())
         self.menubar.addAction(self.menuAbout.menuAction())
 
@@ -189,7 +193,7 @@ class Ui_MainWindow(object):
         self.textEdit_guide.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Host Name and Local Address:</span></p>\n"
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">PeerConn automatically assigns your computer name as &quot;Host Name&quot; and finds your IPv4 to assign it as &quot;Local Address&quot;. The most important thing here is your Local Address, which you can use to set up listener peer sockets for incoming connections, or to connect to another computer using its IPv4.</span></p>\n"
 "<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
@@ -216,7 +220,7 @@ class Ui_MainWindow(object):
         self.textEdit_about.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">About PeerConn</span></p>\n"
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">PeerConn is a peer-to-peer socket chat desktop application. It allows you to create multiple sockets to communicate with other sockets. It aims to manage communication and data transfer between computers with a user-friendly graphical interface.</span></p>\n"
 "<p align=\"justify\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
@@ -239,3 +243,14 @@ class Ui_MainWindow(object):
         self.actionHelp.setText(_translate("MainWindow", "Help"))
         self.actionAbout.setText(_translate("MainWindow", "About"))
         self.actionChange_My_Data.setText(_translate("MainWindow", "My Data"))
+        self.actionDownload_Dir.setText(_translate("MainWindow", "Download Dir"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

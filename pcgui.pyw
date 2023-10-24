@@ -119,28 +119,28 @@ class DialogEditMyData(QDialog):
 
 class PeerConnGUI:
     # Main Window Constants
-    MWINDOW_TITLE: str = 'PeerConn - GUI (v23824)'
+    MWINDOW_TITLE: str = 'PeerConn - GUI (v231024)'
     # Properties
-    _peerconn: PeerConn | None
-    _peerconn_thread: PeerConnThread | None
-    _app: QApplication | None
-    _ui: Ui_MainWindow | None
-    _main_window: QMainWindow | None
-    _dialog: QDialog | None = None
-    _qtimer_update_ui: QTimer | None
-    ICON_FOLDER: str | None
+    _peerconn:                        PeerConn | None
+    _peerconn_thread:           PeerConnThread | None
+    _app:                         QApplication | None
+    _ui:                         Ui_MainWindow | None
+    _main_window:                  QMainWindow | None
+    _dialog:                           QDialog | None = None
+    _qtimer_update_ui:                  QTimer | None
+    ICON_FOLDER:                           str | None
     # QListView Models
     _model_socket_list: QStandardItemModel | None
     _model_chat: QStandardItemModel | None
     # Flags
     _update_chat: bool = False
     # Icons Names
-    icon_client_active: QIcon | None
-    icon_client_inactive: QIcon | None
-    icon_client_waiting: QIcon | None
-    icon_server_active: QIcon | None
-    icon_server_inactive: QIcon | None
-    icon_server_waiting: QIcon | None
+    icon_client_active:     QIcon | None
+    icon_client_inactive:   QIcon | None
+    icon_client_waiting:    QIcon | None
+    icon_server_active:     QIcon | None
+    icon_server_inactive:   QIcon | None
+    icon_server_waiting:    QIcon | None
 
     def __init__(self) -> None:
         self._peerconn = PeerConn()
@@ -324,16 +324,16 @@ class PeerConnGUI:
             message_box = QMessageBox()
             self._peerconn._logger.info(f'UI-{self.edit_my_data_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
-                if len(self._dialog.QLineEdit_display_name.text()) > 0 and self._peerconn._peerdata.name != self._dialog.QLineEdit_display_name.text():
+                if len(self._dialog.QLineEdit_display_name.text()) > 0:
                     self._peerconn._peerdata.name = self._dialog.QLineEdit_display_name.text()
                 else:
                     message_box = QMessageBox()
                     message_box.setWindowTitle('Empty Host Name')
-                    message_box.setText('You can\\t assign an empty host name!')
+                    message_box.setText('You can\'t assign an empty host name!')
                     message_box.setIcon(QMessageBox.Icon.Warning)
                     message_box.addButton(QMessageBox.StandardButton.Ok)
                     message_box.exec_()
-                if self._peerconn.is_valid_ipv4(self._dialog.QLineEdit_local_address.text()) and self._peerconn._peerdata.local_address != self._dialog.QLineEdit_local_address.text():
+                if self._peerconn.is_valid_ipv4(ip= self._dialog.QLineEdit_local_address.text()) and self._peerconn._peerdata.local_address != self._dialog.QLineEdit_local_address.text():
                     message_box.setWindowTitle('Changing Address')
                     message_box.setText('If you change your local address all active sockets are going to be removed!')
                     message_box.setIcon(QMessageBox.Icon.Warning)
@@ -347,7 +347,7 @@ class PeerConnGUI:
                         self._model_socket_list.clear()
                         self._model_chat.clear()
                         self._qtimer_update_ui.start(50)
-                else:
+                elif not self._peerconn.is_valid_ipv4(ip= self._dialog.QLineEdit_local_address.text()):
                     message_box = QMessageBox()
                     message_box.setWindowTitle('Wrong IPv4')
                     message_box.setText('Check if IP address format is correct.')

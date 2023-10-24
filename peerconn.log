@@ -1,0 +1,13 @@
+2023-10-24 15:24:55,015 - INFO - _configure_logging: OK.
+2023-10-24 15:24:55,022 - INFO - get_ipv4_address: WiFi 2 192.168.1.202.
+2023-10-24 15:24:55,022 - INFO - PeerConn: Initialized.
+2023-10-24 15:24:55,032 - DEBUG - Using proactor: IocpProactor
+2023-10-24 15:24:55,271 - INFO - UI-set_user_data_ui: Set.
+2023-10-24 15:24:55,272 - INFO - UI-set_buttons: Set.
+2023-10-24 15:24:55,272 - INFO - thread_main: Running.
+2023-10-24 15:24:55,273 - INFO - UI-set_QListViews: Initialized
+2023-10-24 15:24:55,273 - INFO - UI-PeerConnGUI: Initialized.
+2023-10-24 15:25:22,249 - INFO - thread_main: 0
+2023-10-24 15:25:22,249 - INFO - hm_exit: Active peersockets = 0
+2023-10-24 15:25:22,249 - INFO - hm_exit: Exiting PeerConn..
+2023-10-24 15:25:23,273 - INFO - UI-on_exit: Executed.

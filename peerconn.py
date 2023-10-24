@@ -8,27 +8,28 @@ from logging import basicConfig, DEBUG as LOGGING_DEBUG, getLogger, Logger
 from psutil import net_if_addrs
 from os import path, makedirs
 from sys import argv as sys_argv
-from re import match as regx_match
+from ipaddress import ip_address
+from zipfile import ZipFile, ZIP_DEFLATED
 
 class PeerConn:
-    _peersockets: List[PeerSocket] | None
-    _peerdata: PeerData | None
-    _SLEEP_TIME: float = 0.1
-    _logger: Logger | None
-    _loop: AbstractEventLoop | None
-    _command_event: Event | None
-    _command_queue: Queue | None
-    log_filename: str = 'peerconn.log'
-    _file_delimiter: bytes | None = b'PEERCONN_DELIMETER'
-    _BASE_PATH: str = path.abspath(path.dirname(sys_argv[0]))
-    _DOWNLOADS_FOLDER: str = path.join(_BASE_PATH, 'downloads')
+    _peersockets:       List[PeerSocket] | None
+    _peerdata:                  PeerData | None
+    _SLEEP_TIME:                    float = 0.1
+    _logger:                      Logger | None
+    _loop:             AbstractEventLoop | None
+    _command_event:                Event | None
+    _command_queue:                Queue | None
+    log_filename:                     str = 'peerconn.log'
+    _file_delimiter:               bytes | None = b'PEERCONN_DELIMETER'
+    _BASE_PATH:                       str = path.abspath(path.dirname(sys_argv[0]))
+    _DOWNLOADS_FOLDER:                str = path.join(_BASE_PATH, 'downloads')
 
     def __init__(self) -> None:
         self._configure_logging()
         self._peersockets = []
         self._peerdata = PeerData(
             name= gethostname(),
-            local_address= self.get_ipv4_address(adapter_name= 'Wi-Fi')
+            local_address= self.get_ipv4_address(adapter_name= ['Wi-Fi', 'WiFi'])
         )
         self._command_event = Event()
         self._command_queue = Queue()
@@ -37,15 +38,10 @@ class PeerConn:
         self._logger.info(f'{PeerConn.__name__}: Initialized.')
 
     def is_valid_ipv4(self, ip: str):
-        pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
-        if regx_match(pattern, ip):
-            octets = ip.split('.')
-            
-            for octet in octets:
-                if not (0 <= int(octet) <= 255):
-                    return False
+        try:
+            ip_address(ip)
             return True
-        else:
+        except ValueError:
             return False
 
     def create_peer_socket(self, custom_id: str = None) -> str:
@@ -498,13 +494,14 @@ class PeerConn:
         self._logger = getLogger(__name__)
         self._logger.info(f'{self._configure_logging.__name__}: OK.')
 
-    def get_ipv4_address(self, adapter_name: str) -> str:
+    def get_ipv4_address(self, adapter_name: list[str]) -> str:
         for interface, addrs in net_if_addrs().items():
-            if interface == adapter_name:
-                for addr in addrs:
-                    if addr.family == AF_INET:
-                        self._logger.info(f'{self.get_ipv4_address.__name__}: {interface} {addr.address}.')
-                        return addr.address
+            for elem in adapter_name:
+                if interface.startswith(elem):
+                    for addr in addrs:
+                        if addr.family == AF_INET:
+                            self._logger.info(f'{self.get_ipv4_address.__name__}: {interface} {addr.address}.')
+                            return addr.address
         self._logger.error(f'{self.get_ipv4_address.__name__}: Cannot found!')
         return None
 
