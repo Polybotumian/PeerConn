@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from asyncio import AbstractServer
+from asyncio import AbstractServer, Event
 from asyncio.streams import StreamReader, StreamWriter
 from datetime import datetime
 from typing import List
@@ -55,12 +55,20 @@ class Streams:
     file_reader:    StreamReader | None = None      # Reader to read data from the socket (files)
     file_writer:    StreamWriter | None = None      # Writer to write data to the socket (files)
 
+@dataclass
+class Events:
+    msg_event_server:   Event | None = None
+    file_event_server:  Event | None = None
+    msg_event_stream:   Event | None = None
+    file_event_stream:  Event | None = None
+
 # Main class representing an asynchronous socket
 @dataclass
 class PeerSocket:
     id:                         str | None = None        # An identifier for the socket (could be None if not assigned)
     servers:                Servers | None = None        # References to servers for handling messages and files
     streams:                Streams | None = None        # Data streams for messages and files
+    events:                 Events  | None = None        # To be able to control tasks (for cancelling the task now)
     history:                History | None = None        # Message history
     peerdata:              PeerData | None = None        # Peer data of this computer
     msg_comm_connected:     bool = False                 # Indicates whether the message communication established

@@ -1,6 +1,6 @@
-from models import StreamReader, StreamWriter, datetime, PeerData, Message, History, Servers, Streams, PeerSocket, dataclass, FileData, MessageTypes
+from models import dataclass, StreamReader, StreamWriter, datetime, PeerData, Message, History, Servers, Streams, PeerSocket, FileData, MessageTypes, Events
 from uuid import uuid4
-from asyncio import start_server, open_connection, create_task, CancelledError, IncompleteReadError, AbstractEventLoop, get_running_loop, Event, Queue
+from asyncio import start_server, open_connection, create_task, get_running_loop, CancelledError, IncompleteReadError, AbstractEventLoop, Event, Queue, Task, sleep
 from socket import gethostname, AF_INET
 from typing import List
 from pickle import dumps, loads
@@ -9,7 +9,7 @@ from psutil import net_if_addrs
 from os import path, makedirs
 from sys import argv as sys_argv
 from ipaddress import ip_address
-from zipfile import ZipFile, ZIP_DEFLATED
+# from zipfile import ZipFile, ZIP_DEFLATED
 
 class PeerConn:
     _peersockets:       List[PeerSocket] | None
@@ -143,6 +143,7 @@ class PeerConn:
         if peersocket_ref != None and peersocket_ref.peerdata != None:
             try:
                 peersocket_ref.servers = Servers()
+                peersocket_ref.events = Events(msg_event_server= Event(), msg_event_stream= Event(), file_event_server= Event(), file_event_stream= Event())
                 peersocket_ref.servers.msg_server = await start_server(
                     lambda reader, writer: PeerConn._server_incomming_messages(reader, writer, peersocket_ref, self._logger),
                     peersocket_ref.peerdata.local_address,
@@ -151,6 +152,7 @@ class PeerConn:
 
                 self._logger.info(f'{self.hm_set_listener.__name__}: Message server = OK.')
 
+                # peersocket_ref.events.file_event_server = Event()
                 peersocket_ref.servers.file_server = await start_server(
                     lambda reader, writer: PeerConn._server_incomming_files(reader, writer, peersocket_ref, self._logger),
                     peersocket_ref.peerdata.local_address,
@@ -166,6 +168,7 @@ class PeerConn:
         try:
             if peersocket.streams == None:
                 peersocket.streams = Streams()
+            # peersocket.events.msg_event_server = Event()
             if peersocket.history.messages == None:
                 peersocket.history.messages = []
             peersocket.streams.msg_reader = reader
@@ -182,7 +185,7 @@ class PeerConn:
                     )
             peersocket.history.new_messages += 1
 
-            while peersocket.msg_comm_connected:
+            while not peersocket.events.msg_event_server.is_set():
                 try:
                     data = await peersocket.streams.msg_reader.read(2048)
                     if data:
@@ -252,6 +255,7 @@ class PeerConn:
         try:
             if peersocket.streams == None:
                 peersocket.streams = Streams()
+            # peersocket.events.file_event_stream = Event()
             if peersocket.history.messages == None:
                 peersocket.history.messages = []
             peersocket.streams.file_reader = reader
@@ -269,7 +273,7 @@ class PeerConn:
                     )
             peersocket.history.new_messages += 1
 
-            while peersocket.file_comm_connected:
+            while not peersocket.events.file_event_server.is_set():
                 try:
                     serialized_data = await peersocket.streams.file_reader.readuntil(PeerConn._file_delimiter)
                     peersocket.in_file_transaction = True
@@ -366,6 +370,7 @@ class PeerConn:
             self._logger.info(f'{peersocket_ref.id} - {self.hm_connect.__name__}: {peersocket_ref.peerdata.local_address}: {peersocket_ref.peerdata.msg_port}, {peersocket_ref.peerdata.file_port}')
             try:
                 peersocket_ref.streams = Streams()
+                peersocket_ref.events = Events(msg_event_server= Event(), msg_event_stream= Event(), file_event_server= Event(), file_event_stream= Event())
                 peersocket_ref.streams.msg_reader, peersocket_ref.streams.msg_writer = await open_connection(
                     peersocket_ref.peerdata.local_address,
                     peersocket_ref.peerdata.msg_port
@@ -445,8 +450,7 @@ class PeerConn:
                         peersocket_ref.streams.file_writer.write(self._file_delimiter)
                         with open(file_path, 'rb') as file:
                             total_write = 0
-                            peersocket_ref.in_file_transaction = True
-                            while True:
+                            while not peersocket_ref.events.file_event_stream.is_set():
                                 chunk = file.read(4096)
                                 if not chunk:
                                     peersocket_ref.file_percentage = 0
@@ -456,6 +460,8 @@ class PeerConn:
                                 await peersocket_ref.streams.file_writer.drain()
                                 total_write += len(chunk)
                                 peersocket_ref.file_percentage = round((total_write * 100) / file_data.size)
+                                await sleep(0.1)
+                            peersocket_ref.events.file_event_stream.clear()
                         self._logger.info(f'{peersocket_ref.id} - {self.hm_send_file.__name__}: Sent!')
                         peersocket_ref.history.messages.append(
                             Message(
@@ -512,8 +518,9 @@ class PeerConn:
         connect: int = 2
         send_message: int = 3
         send_file: int = 4
-        close: int = 5
-        close_all: int = 6
+        cancel_file: int = 5
+        close: int = 6
+        close_all: int = 7
 
     @dataclass
     class Command:
@@ -554,6 +561,14 @@ class PeerConn:
                     type= PeerConn.CommandTypes.send_file,
                     socket_id= peersocket_id,
                     file_path= file_path
+                )
+        )
+
+    def cancel_file(self, peersocket_id: str) -> None:
+        self._queue_command(
+            PeerConn.Command(
+                    type= PeerConn.CommandTypes.cancel_file,
+                    socket_id= peersocket_id,
                 )
         )
 
@@ -601,6 +616,8 @@ class PeerConn:
                         await self.hm_send_message(command.socket_id, command.message)
                     elif command.type == PeerConn.CommandTypes.send_file:
                         create_task(self.hm_send_file(command.socket_id, command.file_path))
+                    elif command.type == PeerConn.CommandTypes.cancel_file:
+                        self.get_socket(command.socket_id).events.file_event_stream.set()
                     elif command.type == PeerConn.CommandTypes.close:
                         await self.hm_close(command.socket_id)
                     elif command.type == PeerConn.CommandTypes.close_all:

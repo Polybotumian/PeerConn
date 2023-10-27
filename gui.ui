@@ -44,7 +44,7 @@
       <x>10</x>
       <y>10</y>
       <width>781</width>
-      <height>411</height>
+      <height>401</height>
      </rect>
     </property>
     <property name="acceptDrops">
@@ -202,22 +202,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_pick_file">
+        <widget class="QPushButton" name="pushButton_file">
          <property name="toolTip">
           <string>Opens file dialog.</string>
          </property>
          <property name="text">
           <string>Pick File</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_send_file">
-         <property name="toolTip">
-          <string>Send your file with this button.</string>
-         </property>
-         <property name="text">
-          <string>Send File</string>
          </property>
         </widget>
        </item>
