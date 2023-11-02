@@ -1,14 +1,18 @@
-from models import dataclass, StreamReader, StreamWriter, datetime, PeerData, Message, History, Servers, Streams, PeerSocket, FileData, MessageTypes, Events
+from models import (dataclass, StreamReader, StreamWriter, datetime, PeerData,
+                    Message, History, Servers, Streams, PeerSocket,
+                    FileData, MessageTypes, Events)
 from uuid import uuid4
-from asyncio import start_server, open_connection, create_task, get_running_loop, CancelledError, IncompleteReadError, AbstractEventLoop, Event, Queue, Task, sleep
+from asyncio import (start_server, open_connection, create_task, get_running_loop, sleep, wait_for, TimeoutError,
+                     CancelledError, IncompleteReadError, AbstractEventLoop, Event, Queue)
 from socket import gethostname, AF_INET
 from typing import List
-from pickle import dumps, loads
+from pickle import dumps as pickle_dumps, loads as picke_loads
 from logging import basicConfig, DEBUG as LOGGING_DEBUG, getLogger, Logger
 from psutil import net_if_addrs
 from os import path, makedirs
 from sys import argv as sys_argv
 from ipaddress import ip_address
+from json import dumps as json_dumps, dump as json_dump, loads as json_loads
 # from zipfile import ZipFile, ZIP_DEFLATED
 
 class PeerConn:
@@ -22,22 +26,40 @@ class PeerConn:
     log_filename:                     str = 'peerconn.log'
     _file_delimiter:               bytes | None = b'PEERCONN_DELIMETER'
     _BASE_PATH:                       str = path.abspath(path.dirname(sys_argv[0]))
-    _DOWNLOADS_FOLDER:                str = path.join(_BASE_PATH, 'downloads')
+    _DOWNLOADS_DIR:                str = path.join(_BASE_PATH, 'downloads')
+    _config_path:                     str = path.join(_BASE_PATH, 'config.json')
 
     def __init__(self) -> None:
         self._configure_logging()
         self._peersockets = []
         self._peerdata = PeerData(
             name= gethostname(),
-            local_address= self.get_ipv4_address(adapter_name= ['Wi-Fi', 'WiFi'])
+            local_address= self.get_ipv4_address(adapter_names= ['Wi-Fi', 'WiFi'])
         )
         self._command_event = Event()
         self._command_queue = Queue()
-        if not path.exists(self._DOWNLOADS_FOLDER):
-            makedirs(self._DOWNLOADS_FOLDER)
+        if not path.exists(self._DOWNLOADS_DIR):
+            makedirs(self._DOWNLOADS_DIR)
+        self.configuration_file(False)
         self._logger.info(f'{PeerConn.__name__}: Initialized.')
+    
+    def configuration_file(self, new_configs:bool) -> None:
+        if not path.exists(self._config_path) and new_configs == False:
+            with open(self._config_path, 'w', encoding= 'utf-8') as config_file:
+                json_dump({'name':self._peerdata.name, 'download_dir': self._DOWNLOADS_DIR}, config_file)
+            self._logger.info(f'{self.configuration_file.__name__}: Configuration file initialized.')
+        elif path.exists(self._config_path) and new_configs == True:
+            with open(self._config_path, 'w', encoding= 'utf-8') as config_file:
+                json_dump({'name':self._peerdata.name, 'download_dir': self._DOWNLOADS_DIR}, config_file)
+            self._logger.info(f'{self.configuration_file.__name__}: New configuration file has saved.')
+        else:
+            with open(self._config_path, 'r', encoding= 'utf-8') as config_file:
+                config = json_loads(config_file.read())
+                self._DOWNLOADS_DIR = config['download_dir']
+                self._peerdata.name = config['name']
+            self._logger.info(f'{self.configuration_file.__name__}: Configurations are set.')
 
-    def is_valid_ipv4(self, ip: str):
+    def is_valid_ipv4(self, ip: str) -> bool:
         try:
             ip_address(ip)
             return True
@@ -136,8 +158,8 @@ class PeerConn:
         else:
             self._logger.warning(f'{self.hm_close.__name__}: {id} not found!')
 
-    async def hm_set_listener(self, id: str) -> None:
-        self._logger.info(f'{self.hm_set_listener.__name__}: {id}')
+    async def hm_set_server(self, id: str) -> None:
+        self._logger.info(f'{self.hm_set_server.__name__}: {id}')
         peersocket_ref = self.get_socket(id)
 
         if peersocket_ref != None and peersocket_ref.peerdata != None:
@@ -150,7 +172,7 @@ class PeerConn:
                     peersocket_ref.peerdata.msg_port
                 )
 
-                self._logger.info(f'{self.hm_set_listener.__name__}: Message server = OK.')
+                self._logger.info(f'{self.hm_set_server.__name__}: Message server = OK.')
 
                 # peersocket_ref.events.file_event_server = Event()
                 peersocket_ref.servers.file_server = await start_server(
@@ -158,11 +180,11 @@ class PeerConn:
                     peersocket_ref.peerdata.local_address,
                     peersocket_ref.peerdata.file_port
                 )
-
-                self._logger.info(f'{self.hm_set_listener.__name__}: File server = OK.')
+                
+                self._logger.info(f'{self.hm_set_server.__name__}: File server = OK.')
 
             except Exception as ex:
-                self._logger.error(f'{self.hm_set_listener.__name__}: {id}: {ex}')
+                self._logger.error(f'{self.hm_set_server.__name__}: {id}: {ex}')
 
     async def _server_incomming_messages(reader: StreamReader, writer: StreamWriter, peersocket:PeerSocket, logger: Logger) -> None:
         try:
@@ -277,9 +299,9 @@ class PeerConn:
                 try:
                     serialized_data = await peersocket.streams.file_reader.readuntil(PeerConn._file_delimiter)
                     peersocket.in_file_transaction = True
-                    file_data:FileData = loads(serialized_data.removesuffix(PeerConn._file_delimiter))
+                    file_data:FileData = picke_loads(serialized_data.removesuffix(PeerConn._file_delimiter))
                     logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Receiving a file: {file_data}')
-                    todays_download_path = path.join(PeerConn._DOWNLOADS_FOLDER, str(datetime.now().date()))
+                    todays_download_path = path.join(PeerConn._DOWNLOADS_DIR, str(datetime.now().date()))
                     if not path.exists(todays_download_path):
                         makedirs(todays_download_path)
                     received_file_path = path.join(todays_download_path, f'{file_data.name}{file_data.extension}')
@@ -295,20 +317,44 @@ class PeerConn:
                         peersocket.history.new_messages += 1
                         readed_data_size = 0
                         while True:
-                            data = await peersocket.streams.file_reader.read(4096)
-                            received_file.write(data)
-                            readed_data_size += len(data)
-                            peersocket.file_percentage = round((readed_data_size * 100) / file_data.size)
-                            if readed_data_size >= file_data.size:
-                                logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
-                                peersocket.history.messages.append(
-                                    Message(
-                                        sender= PeerConn.__name__,
-                                        content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is completely received!.',
-                                        date_time= datetime.now(),
-                                        type= MessageTypes.FILE_NOTIFY_1
+                            try:
+                                data = await wait_for(peersocket.streams.file_reader.read(4096), timeout= 3.0)
+                                received_file.write(data)
+                                readed_data_size += len(data)
+                                peersocket.file_percentage = round((readed_data_size * 100) / file_data.size)
+                                if readed_data_size >= file_data.size:
+                                    logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
+                                    peersocket.history.messages.append(
+                                        Message(
+                                            sender= PeerConn.__name__,
+                                            content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is completely received!.',
+                                            date_time= datetime.now(),
+                                            type= MessageTypes.FILE_NOTIFY_1
+                                        )
                                     )
-                                )
+                                    peersocket.history.new_messages += 1
+                                    break
+                                elif not data:
+                                    logger.warning(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Failed to receive!')
+                                    peersocket.history.messages.append(
+                                        Message(
+                                            sender= PeerConn.__name__,
+                                            content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is failed to receive!.',
+                                            date_time= datetime.now(),
+                                            type= MessageTypes.FILE_NOTIFY_1
+                                        )
+                                    )
+                                    peersocket.history.new_messages += 1
+                                    break
+                            except TimeoutError:
+                                peersocket.history.messages.append(
+                                        Message(
+                                            sender= PeerConn.__name__,
+                                            content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is failed to receive!.',
+                                            date_time= datetime.now(),
+                                            type= MessageTypes.FILE_NOTIFY_1
+                                        )
+                                    )
                                 peersocket.history.new_messages += 1
                                 break
                 except IncompleteReadError as ex:
@@ -405,65 +451,83 @@ class PeerConn:
         try:
             peersocket_ref = self.get_socket(id)
             if peersocket_ref != None:
-                if peersocket_ref.streams.msg_writer != None:
-                    peersocket_ref.streams.msg_writer.write(data.encode())
-                    peersocket_ref.history.messages.append(Message(self._peerdata.name, data, datetime.now(), type= MessageTypes.ME))
-                    await peersocket_ref.streams.msg_writer.drain()
-                    self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Sent!')
-                else:
-                    self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Can\'t sent!')
-                    peersocket_ref.history.messages.append(
-                            Message(
+                if peersocket_ref.streams != None:
+                    if peersocket_ref.streams.msg_writer != None:
+                        peersocket_ref.streams.msg_writer.write(data.encode())
+                        peersocket_ref.history.messages.append(Message(self._peerdata.name, data, datetime.now(), type= MessageTypes.ME))
+                        await peersocket_ref.streams.msg_writer.drain()
+                        self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Sent!')
+                    else:
+                        self._logger.info(f'{peersocket_ref.id} - {self.hm_send_message.__name__}: Can\'t sent!')
+                        self.no_repeat_notification_msg(
+                            peersocket_ref, Message(
                                 sender= PeerConn.__name__,
-                                content= 'Message cant be send!',
+                                content= 'Message can\'t be send!',
                                 date_time= datetime.now(),
                                 type= MessageTypes.SYSTEM_WARN
                             )
                         )
-                    peersocket_ref.history.new_messages += 1
+                else:
+                    self.no_repeat_notification_msg(
+                            peersocket_ref, Message(
+                                sender= PeerConn.__name__,
+                                content= 'No connection!',
+                                date_time= datetime.now(),
+                                type= MessageTypes.SYSTEM_WARN
+                            )
+                        )
         except ConnectionError as ex:
-            await self.close(id)
             self._logger.error(f'{id} - {self.hm_send_message.__name__}: {ex}')
+            await self.close(id)
 
     async def hm_send_file(self, id: str, file_path: str) -> None:
         try:
-            if file_path != '':
-                peersocket_ref = self.get_socket(id)
-                if peersocket_ref != None and not peersocket_ref.in_file_transaction:
-                    if peersocket_ref.streams.file_writer != None:
-                        peersocket_ref.in_file_transaction = True
-                        file_name_without_extension, file_extension = path.splitext(file_path)
-                        file_name_without_extension = file_name_without_extension.split('/')[-1]
-                        file_data = FileData(name= file_name_without_extension, extension= file_extension, size= path.getsize(file_path))
-                        serialized_file_data = dumps(file_data)
-                        self._logger.info(f'{peersocket_ref.id} - {PeerConn.hm_send_file.__name__}: Sending a file: {file_data}')
-                        peersocket_ref.history.messages.append(
+            path.isdir(file_path)
+            peersocket_ref = self.get_socket(id)
+            if peersocket_ref != None and not peersocket_ref.in_file_transaction:
+                if peersocket_ref.streams.file_writer != None:
+                    peersocket_ref.in_file_transaction = True
+                    file_name_without_extension, file_extension = path.splitext(file_path)
+                    file_name_without_extension = file_name_without_extension.split('/')[-1]
+                    file_data = FileData(name= file_name_without_extension, extension= file_extension, size= path.getsize(file_path))
+                    serialized_file_data = pickle_dumps(file_data)
+                    self._logger.info(f'{peersocket_ref.id} - {PeerConn.hm_send_file.__name__}: Sending a file: {file_data}')
+                    self.no_repeat_notification_msg(peersocket_ref,
+                        Message(
+                            sender= PeerConn.__name__,
+                            content= f'Sending [{file_data.name}{file_data.extension}, {file_data.size}] to {peersocket_ref.peerdata.name}.',
+                            date_time= datetime.now(),
+                            type= MessageTypes.FILE_NOTIFY_0
+                        )
+                    )
+                    peersocket_ref.streams.file_writer.write(serialized_file_data)
+                    peersocket_ref.streams.file_writer.write(self._file_delimiter)
+                    with open(file_path, 'rb') as file:
+                        total_write = 0
+                        while not peersocket_ref.events.file_event_stream.is_set():
+                            chunk = file.read(4096)
+                            if not chunk:
+                                peersocket_ref.file_percentage = 0
+                                peersocket_ref.in_file_transaction = False
+                                break
+                            peersocket_ref.streams.file_writer.write(chunk)
+                            await peersocket_ref.streams.file_writer.drain()
+                            total_write += len(chunk)
+                            peersocket_ref.file_percentage = round((total_write * 100) / file_data.size)
+                            await sleep(self._SLEEP_TIME)
+                    if peersocket_ref.events.file_event_stream.is_set():
+                        self._logger.info(f'{peersocket_ref.id} - {self.hm_send_file.__name__}: Cancelled!')
+                        self.no_repeat_notification_msg(peersocket_ref,
                             Message(
                                 sender= PeerConn.__name__,
-                                content= f'Sending [{file_data.name}{file_data.extension}, {file_data.size}] to {peersocket_ref.peerdata.name}.',
+                                content= f'[{file_data.name}{file_data.extension}] is cancelled!',
                                 date_time= datetime.now(),
-                                type= MessageTypes.FILE_NOTIFY_0
+                                type= MessageTypes.FILE_NOTIFY_1
                             )
                         )
-                        peersocket_ref.history.new_messages += 1
-                        peersocket_ref.streams.file_writer.write(serialized_file_data)
-                        peersocket_ref.streams.file_writer.write(self._file_delimiter)
-                        with open(file_path, 'rb') as file:
-                            total_write = 0
-                            while not peersocket_ref.events.file_event_stream.is_set():
-                                chunk = file.read(4096)
-                                if not chunk:
-                                    peersocket_ref.file_percentage = 0
-                                    peersocket_ref.in_file_transaction = False
-                                    break
-                                peersocket_ref.streams.file_writer.write(chunk)
-                                await peersocket_ref.streams.file_writer.drain()
-                                total_write += len(chunk)
-                                peersocket_ref.file_percentage = round((total_write * 100) / file_data.size)
-                                await sleep(0.1)
-                            peersocket_ref.events.file_event_stream.clear()
+                    else:
                         self._logger.info(f'{peersocket_ref.id} - {self.hm_send_file.__name__}: Sent!')
-                        peersocket_ref.history.messages.append(
+                        self.no_repeat_notification_msg(peersocket_ref,
                             Message(
                                 sender= PeerConn.__name__,
                                 content= f'[{file_data.name}{file_data.extension}] is sent to {peersocket_ref.peerdata.name}!',
@@ -471,23 +535,26 @@ class PeerConn:
                                 type= MessageTypes.FILE_NOTIFY_1
                             )
                         )
-                        peersocket_ref.history.new_messages += 1
-                    else:
-                        peersocket_ref.history.messages.append(
-                            Message(
-                                sender= PeerConn.__name__,
-                                content= 'File cant be send!',
-                                date_time= datetime.now(),
-                                type= MessageTypes.SYSTEM_WARN
-                            )
+                    peersocket_ref.events.file_event_stream.clear()
+                else:
+                    self.no_repeat_notification_msg(peersocket_ref,
+                        Message(
+                            sender= PeerConn.__name__,
+                            content= 'File can\'t be send!',
+                            date_time= datetime.now(),
+                            type= MessageTypes.SYSTEM_WARN
                         )
-                        peersocket_ref.history.new_messages += 1
-            else:
-                self._logger.warning(f'{id} - {self.hm_send_file.__name__}: File path is empty!')
+                    )
         except Exception as ex:
             self._logger.error(f'{id} - {self.hm_send_file.__name__}: {peersocket_ref.id}, {ex}')
         finally:
             peersocket_ref.in_file_transaction = False
+
+    def no_repeat_notification_msg(self, peersocket_ref: PeerSocket, message: Message) -> None:
+        if peersocket_ref.history.messages:
+            if peersocket_ref.history.messages[-1].content != message.content:
+                peersocket_ref.history.messages.append(message)
+                peersocket_ref.history.new_messages += 1
 
     def _configure_logging(self) -> None:
         with open(self.log_filename, "w") as file:
@@ -500,10 +567,10 @@ class PeerConn:
         self._logger = getLogger(__name__)
         self._logger.info(f'{self._configure_logging.__name__}: OK.')
 
-    def get_ipv4_address(self, adapter_name: list[str]) -> str:
+    def get_ipv4_address(self, adapter_names: list[str]) -> str:
         for interface, addrs in net_if_addrs().items():
-            for elem in adapter_name:
-                if interface.startswith(elem):
+            for adapter_name in adapter_names:
+                if interface.startswith(adapter_name):
                     for addr in addrs:
                         if addr.family == AF_INET:
                             self._logger.info(f'{self.get_ipv4_address.__name__}: {interface} {addr.address}.')
@@ -519,8 +586,10 @@ class PeerConn:
         send_message: int = 3
         send_file: int = 4
         cancel_file: int = 5
-        close: int = 6
-        close_all: int = 7
+        change_download_dir: int = 6
+        config_file: int = 7
+        close: int = 8
+        close_all: int = 9
 
     @dataclass
     class Command:
@@ -529,6 +598,7 @@ class PeerConn:
         peerdata: PeerData = None
         message: str = None
         file_path: str = None
+        activate: bool = None
 
     def set_listener(self, peersocket_id: str) -> None:
         self._queue_command(
@@ -572,6 +642,22 @@ class PeerConn:
                 )
         )
 
+    def change_download_dir(self, dir_path: str) -> None:
+        self._queue_command(
+            PeerConn.Command(
+                    type= PeerConn.CommandTypes.change_download_dir,
+                    file_path= dir_path
+                )
+        )
+
+    def config_file(self, save) -> None:
+        self._queue_command(
+            PeerConn.Command(
+                    type= PeerConn.CommandTypes.config_file,
+                    activate = save
+                )
+        )
+
     def close(self, peersocket_id: str) -> None:
         self._queue_command(
             PeerConn.Command(
@@ -609,7 +695,7 @@ class PeerConn:
                     command: PeerConn.Command = await self._command_queue.get()
                     self._logger.info(f'{self.thread_main.__name__}: {command.type}')
                     if command.type == PeerConn.CommandTypes.set_listener:
-                        await self.hm_set_listener(command.socket_id)
+                        await self.hm_set_server(command.socket_id)
                     elif command.type == PeerConn.CommandTypes.connect:
                         await self.hm_connect(command.socket_id)
                     elif command.type == PeerConn.CommandTypes.send_message:
@@ -618,6 +704,10 @@ class PeerConn:
                         create_task(self.hm_send_file(command.socket_id, command.file_path))
                     elif command.type == PeerConn.CommandTypes.cancel_file:
                         self.get_socket(command.socket_id).events.file_event_stream.set()
+                    elif command.type == PeerConn.CommandTypes.change_download_dir:
+                        PeerConn._DOWNLOADS_DIR = command.file_path
+                    elif command.type == PeerConn.CommandTypes.config_file:
+                        self.configuration_file(command.activate)
                     elif command.type == PeerConn.CommandTypes.close:
                         await self.hm_close(command.socket_id)
                     elif command.type == PeerConn.CommandTypes.close_all:

@@ -1,10 +1,10 @@
 from gui import Ui_MainWindow
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMenu, QAction, QDialog, QLabel, QFormLayout, 
-                             QLineEdit, QMessageBox, QFileDialog, QSpinBox, QStyledItemDelegate, QListView, QStyle)
-from PyQt5.QtCore import Qt, QPoint, QThread, pyqtSignal, QTimer, QSize, QMargins
-from PyQt5.QtGui import QColor, QIcon, QStandardItemModel, QStandardItem, QPen, QPainter, QBrush, QFont, QFontMetrics
+                             QLineEdit, QMessageBox, QFileDialog, QSpinBox)
+from PyQt5.QtCore import Qt, QPoint, QThread, pyqtSignal, QTimer
+from PyQt5.QtGui import QColor, QIcon, QStandardItemModel, QStandardItem
 from sys import argv as sys_argv, exit as sys_exit
-from peerconn import PeerConn, PeerData, MessageTypes, Message
+from peerconn import PeerConn, PeerData, MessageTypes
 from asyncio import run as async_run
 from time import sleep
 from os import path
@@ -22,65 +22,13 @@ class PeerConnThread(QThread):
         async_run(self.peerconn_ref.thread_main())
         self.terminate_thread.emit()
 
-class SpeechBubbleDelegate(QStyledItemDelegate):
-    def paint(self, painter, option, index):
-        params:dict = index.data(Qt.ItemDataRole.UserRole + 1)
-        
-        if option.state & QStyle.StateFlag.State_Selected:
-            bg_color = option.palette.highlight().color()
-            text_color = option.palette.highlightedText().color()
-        else:
-            bg_color: QColor = params.get('bg_color')
-            text_color: QColor = params.get('font_color')
-
-        text = index.data(Qt.ItemDataRole.DisplayRole)
-        text_size = QFontMetrics(option.font).size(Qt.TextFlag.TextWordWrap, text)
-        # font = QFont()
-        # font.setPointSize(params.get('font_point_size'))
-        # painter.setFont(font)
-
-        bubble_rect = option.rect.marginsAdded(QMargins(5, -5, 35, -5))
-        alignment_flag: int = params.get('alignment_flag')
-        listview_size: QSize = params.get('listview_size')
-
-        if alignment_flag == Qt.AlignmentFlag.AlignCenter:
-            bubble_rect.setLeft(listview_size.width() // 3)
-            bubble_rect.setRight((listview_size.width() * 2) // 3)
-        elif alignment_flag == Qt.AlignmentFlag.AlignLeft:
-            bubble_rect.setLeft(0)
-            bubble_rect.setRight(text_size.width() + 3)
-        elif alignment_flag == Qt.AlignmentFlag.AlignRight:
-            bubble_rect.setLeft(listview_size.width() - text_size.width() - 30)
-            bubble_rect.setRight(listview_size.width() - 30)
-
-        text_rect = bubble_rect
-        
-        # bubble_rect.setWidth(text_size.width())
-        # bubble_rect.setHeight(text_size.height())
-        
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QBrush(bg_color))
-        painter.setPen(QPen(bg_color))
-        painter.drawRoundedRect(bubble_rect, 10, 10, Qt.SizeMode.RelativeSize)
-
-        painter.setPen(QPen(text_color))
-        painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap or Qt.TextFlag.TextWrapAnywhere | Qt.TextFormat.PlainText, text)
-        
-    def sizeHint(self, option, index):
-        # params: dict = index.data(Qt.ItemDataRole.UserRole + 1)
-        text = index.data(Qt.ItemDataRole.DisplayRole)
-        text_size = QFontMetrics(option.font).size(Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap  or Qt.TextFlag.TextWrapAnywhere | Qt.TextFormat.PlainText, text)
-
-        size = super().sizeHint(option, index)
-        size.setHeight(text_size.height() + 5)
-        # size.setWidth(text_size.width() + 5)
-        return size
-
 class DialogListen(QDialog):
     def __init__(self, local_address: str) -> None:
         super().__init__()
         self.setWindowTitle('Create Listener')
-        self.setFixedSize(240, 180)
+        self.setMinimumSize(240, 200)
+        self.setMaximumHeight(200)
+        self.setWhatsThis('To create a listener/server.')
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit()
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
@@ -106,7 +54,9 @@ class DialogConnect(QDialog):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle('Create Connection')
-        self.setFixedSize(240, 180)
+        self.setMinimumSize(240, 200)
+        self.setMaximumHeight(200)
+        self.setWhatsThis('To connect a listener/server.')
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit()
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
@@ -133,7 +83,9 @@ class DialogEditConnectionItem(QDialog):
         super().__init__()
         # self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle(f'Edit {peerdata.name}')
-        self.setFixedSize(240, 180)
+        self.setMinimumSize(240, 200)
+        self.setMaximumHeight(200)
+        self.setWhatsThis('Here you can only edit name of the peersocket.')
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit(peerdata.name)
         layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
@@ -154,16 +106,29 @@ class DialogEditConnectionItem(QDialog):
         layout.addRow(self.QPushButton_cancel)
         self.setLayout(layout)
 
-class DialogEditMyData(QDialog):
-    def __init__(self, peerdata: PeerData) -> None:
+class DialogChangeConfigs(QDialog):
+    def __init__(self, peerdata: PeerData, download_dir_path: str) -> None:
         super().__init__()
-        self.setWindowTitle(f'Edit My Data')
-        self.setFixedSize(240, 140)
+        self.setWindowTitle(f'Edit Configurations')
+        self.setMinimumSize(240, 200)
+        self.setMaximumHeight(200)
+        self.setWhatsThis('Here is your main configurations.'
+                          'You can change and changes will be saved'
+                          'except "Address".')
         layout = QFormLayout()
         self.QLineEdit_display_name = QLineEdit(peerdata.name)
         layout.addRow(QLabel('Host Name'), self.QLineEdit_display_name)
         self.QLineEdit_local_address = QLineEdit(peerdata.local_address)
         layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
+        self.QLineEdit_download_dir_path = QLineEdit(download_dir_path)
+        layout.addRow(QLabel('Directory Path'), self.QLineEdit_download_dir_path)
+        self.QPushButton_pick_dir = QPushButton('Pick Dir')
+        def directory_dialog():
+            directory_path = QFileDialog.getExistingDirectory(self, "Select Directory")
+            if directory_path:
+                self.QLineEdit_download_dir_path.setText(directory_path)
+        self.QPushButton_pick_dir.clicked.connect(directory_dialog)
+        layout.addRow(self.QPushButton_pick_dir)
         self.QPushButton_save_changes = QPushButton('Save')
         self.QPushButton_save_changes.clicked.connect(self.accept)
         layout.addRow(self.QPushButton_save_changes)
@@ -174,28 +139,28 @@ class DialogEditMyData(QDialog):
 
 class PeerConnGUI:
     # Main Window Constants
-    MWINDOW_TITLE: str = 'PeerConn - GUI (v251024)'
+    MAIN_WINDOW_TITLE: str = 'PeerConn - GUI (v231030)'
     # Properties
-    _peerconn:                        PeerConn | None
-    _peerconn_thread:           PeerConnThread | None
-    _app:                         QApplication | None
-    _ui:                         Ui_MainWindow | None
-    _main_window:                  QMainWindow | None
+    _peerconn:                        PeerConn | None = None
+    _peerconn_thread:           PeerConnThread | None = None
+    _app:                         QApplication | None = None
+    _ui:                         Ui_MainWindow | None = None
+    _main_window:                  QMainWindow | None = None
     _dialog:                           QDialog | None = None
-    _qtimer_update_ui:                  QTimer | None
-    ICON_FOLDER:                           str | None
+    _qtimer_update_ui:                  QTimer | None = None
+    ICON_FOLDER:                           str | None = None
     # QListView Models
-    _model_socket_list: QStandardItemModel | None
-    _model_chat: QStandardItemModel | None
+    _model_socket_list: QStandardItemModel | None = None
+    _model_chat: QStandardItemModel | None = None
     # Flags
     _update_chat: bool = False
     # Icons Names
-    icon_client_active:     QIcon | None
-    icon_client_inactive:   QIcon | None
-    icon_client_waiting:    QIcon | None
-    icon_server_active:     QIcon | None
-    icon_server_inactive:   QIcon | None
-    icon_server_waiting:    QIcon | None
+    icon_client_active:     QIcon | None = None
+    icon_client_inactive:   QIcon | None = None
+    icon_client_waiting:    QIcon | None = None
+    icon_server_active:     QIcon | None = None
+    icon_server_inactive:   QIcon | None = None
+    icon_server_waiting:    QIcon | None = None
 
     def __init__(self) -> None:
         self._peerconn = PeerConn()
@@ -219,11 +184,11 @@ class PeerConnGUI:
         self.icon_server_active = QIcon(path.join(self.ICON_FOLDER,'sockets/server_active.png'))
         self.icon_server_inactive = QIcon(path.join(self.ICON_FOLDER,'sockets/server_inactive.png'))
         self.icon_server_waiting = QIcon(path.join(self.ICON_FOLDER,'sockets/server_waiting.png'))
-        self._main_window.setWindowTitle(self.MWINDOW_TITLE)
+        self._main_window.setWindowTitle(self.MAIN_WINDOW_TITLE)
         self._main_window.setWindowIcon(QIcon(path.join(self.ICON_FOLDER,'window/peerconn.png')))
         self.set_user_data_ui()
         self._ui.listView_chat.setEnabled(False)
-        self._ui.lineEdit_message.setMaxLength(2048)
+        self._ui.lineEdit_message.setMaxLength(512)
         self._ui.lineEdit_message.returnPressed.connect(self.send_message)
         self._ui.lineEdit_message.setEnabled(False)
         self._ui.progressBar_file.setHidden(True)
@@ -235,7 +200,7 @@ class PeerConnGUI:
         self._ui.actionPreferences.setEnabled(False)
         self._ui.actionHelp.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(1))
         self._ui.actionAbout.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(2))
-        self._ui.actionChange_My_Data.triggered.connect(self.edit_my_data_dialog)
+        self._ui.actionChange_My_Data.triggered.connect(self.change_configs_dialog)
 
     def set_user_data_ui(self) -> None:
         self._ui.lineEdit_user_hostname.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -255,13 +220,13 @@ class PeerConnGUI:
         self._ui.pushButton_send_message.setEnabled(False)
         self._ui.pushButton_about_back.clicked.connect(lambda:self._ui.stackedWidget.setCurrentIndex(0))
         self._ui.pushButton_guide_back.clicked.connect(lambda:self._ui.stackedWidget.setCurrentIndex(0))
-        self._ui.pushButton_file.clicked.connect(self.pick_file)
+        self._ui.pushButton_file.clicked.connect(partial(self.pick_file, self._ui.lineEdit_file_path))
         self._ui.pushButton_file.setEnabled(False)
         self._peerconn._logger.info(f'UI-{self.set_buttons.__name__}: Set.')
 
     def send_message(self) -> None:
         index = self._ui.listView_sockets.currentIndex()
-        if index.isValid()and self._ui.lineEdit_message.text():
+        if index.isValid() and self._ui.lineEdit_message.text():
             selected_item = self._model_socket_list.itemFromIndex(index)
             if selected_item:
                 peersocket_id = selected_item.data(Qt.ItemDataRole.UserRole + 1)
@@ -291,12 +256,12 @@ class PeerConnGUI:
     def cancel_file(self, peersocket_id: str) -> None:
         self._peerconn.cancel_file(peersocket_id)
     
-    def pick_file(self):
+    def pick_file(self, line_edit: QLineEdit):
         options = QFileDialog.Options()
         options |= QFileDialog.Option.ReadOnly
         file_path, _ = QFileDialog.getOpenFileName(self._main_window, "Select File", "", "All Files (*)", options= options)
         if file_path:
-            self._ui.lineEdit_file_path.setText(file_path)
+            line_edit.setText(file_path)
 
     def listen_dialog(self) -> None:
         try:
@@ -374,11 +339,11 @@ class PeerConnGUI:
         except Exception as ex:
             self._peerconn._logger.error(f'UI-{self.edit_connection_item_dialog.__name__}: {ex}')
 
-    def edit_my_data_dialog(self) -> None:
+    def change_configs_dialog(self) -> None:
         try:
-            self._dialog = DialogEditMyData(self._peerconn._peerdata)
+            self._dialog = DialogChangeConfigs(self._peerconn._peerdata, self._peerconn._DOWNLOADS_DIR)
             message_box = QMessageBox()
-            self._peerconn._logger.info(f'UI-{self.edit_my_data_dialog.__name__}: Executed.')
+            self._peerconn._logger.info(f'UI-{self.change_configs_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 if len(self._dialog.QLineEdit_display_name.text()) > 0:
                     self._peerconn._peerdata.name = self._dialog.QLineEdit_display_name.text()
@@ -410,10 +375,20 @@ class PeerConnGUI:
                     message_box.setIcon(QMessageBox.Icon.Warning)
                     message_box.addButton(QMessageBox.StandardButton.Ok)
                     message_box.exec_()
+                if path.isdir(self._dialog.QLineEdit_download_dir_path.text()):
+                    self._peerconn._DOWNLOADS_DIR = self._dialog.QLineEdit_download_dir_path.text()
+                else:
+                    message_box = QMessageBox()
+                    message_box.setWindowTitle('Non Existing Directory')
+                    message_box.setText('Check if directory path is exists.')
+                    message_box.setIcon(QMessageBox.Icon.Warning)
+                    message_box.addButton(QMessageBox.StandardButton.Ok)
+                    message_box.exec_()
                 self._ui.lineEdit_user_hostname.setText(self._peerconn._peerdata.name)
                 self._ui.lineEdit_user_local_address.setText(self._peerconn._peerdata.local_address)
+                self._peerconn.config_file(True)
         except Exception as ex:
-            self._peerconn._logger.error(f'UI-{self.edit_my_data_dialog.__name__}: {ex}')
+            self._peerconn._logger.error(f'UI-{self.change_configs_dialog.__name__}: {ex}')
 
     def set_QListViews(self) -> None:
         self._model_socket_list = QStandardItemModel()
@@ -424,8 +399,7 @@ class PeerConnGUI:
 
         self._model_chat = QStandardItemModel()
         self._ui.listView_chat.setModel(self._model_chat)
-        self._ui.listView_chat.setItemDelegate(SpeechBubbleDelegate())
-        # self._ui.listView_chat.setSpacing(5)
+        self._ui.listView_chat.setAutoScroll(True)
         self._peerconn._logger.info(f'UI-{self.set_QListViews.__name__}: Initialized')
 
     def context_menu_active_connections(self, position: QPoint) -> None:
@@ -474,28 +448,6 @@ class PeerConnGUI:
                 for i in range(0, len(self._peerconn._peersockets)):
                     peersocket_ref = self._peerconn._peersockets[i]
 
-                    if not peersocket_ref.in_file_transaction:
-                        self._ui.pushButton_file.setEnabled(True)
-                        self._ui.progressBar_file.setHidden(True)
-                        self._ui.progressBar_file.setValue(0)
-                    else:
-                        # self._ui.pushButton_file.setEnabled(False)
-                        self._ui.progressBar_file.setHidden(False)
-                        self._ui.progressBar_file.setValue(peersocket_ref.file_percentage)
-
-                    if len(self._ui.lineEdit_file_path.text()) > 0 and not peersocket_ref.in_file_transaction:
-                        self._ui.pushButton_file.disconnect()
-                        self._ui.pushButton_file.clicked.connect(self.send_file)
-                        self._ui.pushButton_file.setText('Send File')
-                    elif peersocket_ref.in_file_transaction and peersocket_ref.file_percentage == 0:
-                        self._ui.pushButton_file.disconnect()
-                        self._ui.pushButton_file.clicked.connect(partial(self.cancel_file, peersocket_ref.id))
-                        self._ui.pushButton_file.setText('Abort File')
-                    else:
-                        self._ui.pushButton_file.disconnect()
-                        self._ui.pushButton_file.clicked.connect(self.pick_file)
-                        self._ui.pushButton_file.setText('Pick File')
-
                     if peersocket_ref.servers: # Check if socket is server
                         if (peersocket_ref.msg_comm_connected and
                             peersocket_ref.file_comm_connected):
@@ -534,95 +486,61 @@ class PeerConnGUI:
                 peersocket_id = selected_item.data(Qt.ItemDataRole.UserRole + 1)
                 peersocket_ref = self._peerconn.get_socket(peersocket_id)
                 if peersocket_ref != None:
-                    history = peersocket_ref.history
-                    if peersocket_ref.in_file_transaction == False:
-                                self._ui.pushButton_file.setEnabled(True)
-                                self._ui.progressBar_file.setHidden(True)
-                                self._ui.progressBar_file.setValue(0)
-                    else:
-                        # self._ui.pushButton_file.setEnabled(False)
+                    if len(self._ui.lineEdit_file_path.text()) > 0 and peersocket_ref.in_file_transaction == False:
+                        self._ui.pushButton_file.disconnect()
+                        self._ui.pushButton_file.clicked.connect(self.send_file)
+                        self._ui.pushButton_file.setText('Send File')
+                    elif peersocket_ref.in_file_transaction == True:
+                        if peersocket_ref.file_percentage == 0:
+                            self._ui.pushButton_file.disconnect()
+                            self._ui.pushButton_file.clicked.connect(partial(self.cancel_file, peersocket_ref.id))
+                            self._ui.pushButton_file.setText('Abort File')
                         self._ui.progressBar_file.setHidden(False)
                         self._ui.progressBar_file.setValue(peersocket_ref.file_percentage)
-                    if history.new_messages > 0 or self._update_chat:
-                        for i in range(self._model_chat.rowCount(), len(history.messages)):
-                                msg = history.messages[i]
+                    elif peersocket_ref.in_file_transaction == False and len(self._ui.lineEdit_file_path.text()) == 0:
+                            self._ui.progressBar_file.setHidden(True)
+                            self._ui.progressBar_file.setValue(0)
+                            self._ui.pushButton_file.disconnect()
+                            self._ui.pushButton_file.clicked.connect(partial(self.pick_file, self._ui.lineEdit_file_path))
+                            self._ui.pushButton_file.setText('Pick File')
+                    if peersocket_ref.history.new_messages > 0 or self._update_chat:
+                        for i in range(self._model_chat.rowCount(), len(peersocket_ref.history.messages)):
+                                msg = peersocket_ref.history.messages[i]
                                 msg_item = QStandardItem(f'{msg.content}')
-                                msg_item.setToolTip(f'{msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}')
+                                msg_item.setToolTip(f'{msg.date_time.day}/{msg.date_time.month}/{msg.date_time.year}, {msg.date_time.hour}:{msg.date_time.minute}, {msg.sender}')
                                 if msg.type != None:
-                                    msg_item_params = {
-                                        'listview_size': self._ui.listView_chat.size(),
-                                        'bg_color': QColor(255, 255, 255), 
-                                        'font_color': QColor(0, 0, 0),
-                                        # 'font_point_size': 12,
-                                        'alignment_flag': Qt.AlignmentFlag.AlignLeft,
-                                        }
                                     if msg.type == MessageTypes.CONNECTION_ESTABLISHED:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(40, 160, 40),
-                                                    'font_color': QColor(255, 255, 255),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignCenter
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(40, 160, 40))
+                                        msg_item.setForeground(QColor(255, 255, 255))
                                     elif msg.type == MessageTypes.CONNECTION_LOST:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(160, 40, 40),
-                                                    'font_color': QColor(255, 255, 255),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignCenter
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(160, 40, 40))
+                                        msg_item.setForeground(QColor(255, 255, 255))
                                     elif msg.type == MessageTypes.ME:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(130, 150, 220),
-                                                    'font_color': QColor(255, 255, 255),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignRight
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify | Qt.AlignmentFlag.AlignRight)
+                                        msg_item.setBackground(QColor(130, 150, 220))
+                                        msg_item.setForeground(QColor(0, 0, 0))
                                     elif msg.type == MessageTypes.PEER:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(80, 100, 170),
-                                                    'font_color': QColor(255, 255, 255),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignLeft
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignJustify)
+                                        msg_item.setBackground(QColor(80, 100, 170))
+                                        msg_item.setForeground(QColor(255, 255, 255))
                                     elif msg.type == MessageTypes.FILE_NOTIFY_0:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(255, 145, 0),
-                                                    # 'font_color': QColor(0, 0, 0),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignCenter
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(255, 145, 0))
+                                        msg_item.setForeground(QColor(0, 0, 0))
                                     elif msg.type == MessageTypes.FILE_NOTIFY_1:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(180, 100, 0),
-                                                    'font_color': QColor(255, 255, 255),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignCenter
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(180, 100, 0))
+                                        msg_item.setForeground(QColor(255, 255, 255))
                                     elif msg.type == MessageTypes.SYSTEM_WARN:
-                                        msg_item_params.update(
-                                                {
-                                                    'bg_color': QColor(100, 0, 250),
-                                                    'font_color': QColor(255, 255, 255),
-                                                    'alignment_flag': Qt.AlignmentFlag.AlignCenter
-                                                }
-                                             )
-                                        msg_item.setData(msg_item_params, Qt.ItemDataRole.UserRole + 1)
+                                        msg_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                                        msg_item.setBackground(QColor(100, 0, 250))
+                                        msg_item.setForeground(QColor(255, 255, 255))
                                 self._model_chat.appendRow(msg_item)
                         last_item_index = self._model_chat.index(self._model_chat.rowCount() - 1, 0)
                         self._ui.listView_chat.scrollTo(last_item_index)
-                        history.new_messages = 0
+                        peersocket_ref.history.new_messages = 0
                         self._update_chat = False
 
     def on_exit(self) -> None:

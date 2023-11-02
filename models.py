@@ -74,4 +74,4 @@ class PeerSocket:
     msg_comm_connected:     bool = False                 # Indicates whether the message communication established
     file_comm_connected:    bool = False                 # Indicates whether the file communication established
     in_file_transaction:    bool = False
-    file_percentage:            int | None = None
+    file_percentage:            int | None = 0

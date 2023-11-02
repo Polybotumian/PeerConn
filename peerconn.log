@@ -1,33 +1,28 @@
-2023-10-27 15:55:18,650 - INFO - _configure_logging: OK.
-2023-10-27 15:55:18,656 - INFO - get_ipv4_address: WiFi 2 192.168.1.202.
-2023-10-27 15:55:18,656 - INFO - PeerConn: Initialized.
-2023-10-27 15:55:18,680 - DEBUG - Using proactor: IocpProactor
-2023-10-27 15:55:18,904 - INFO - UI-set_user_data_ui: Set.
-2023-10-27 15:55:18,904 - INFO - UI-set_buttons: Set.
-2023-10-27 15:55:18,905 - INFO - thread_main: Running.
-2023-10-27 15:55:18,905 - INFO - UI-set_QListViews: Initialized
-2023-10-27 15:55:18,906 - INFO - UI-PeerConnGUI: Initialized.
-2023-10-27 15:55:19,662 - INFO - UI-listen_dialog: Executed.
-2023-10-27 15:55:21,471 - INFO - create_peer_socket: c197bbe5-e373-4241-8fe3-cec73acf1bde
-2023-10-27 15:55:21,472 - INFO - set_peersocket: c197bbe5-e373-4241-8fe3-cec73acf1bde
-2023-10-27 15:55:21,472 - INFO - thread_main: 1
-2023-10-27 15:55:21,472 - INFO - hm_set_listener: c197bbe5-e373-4241-8fe3-cec73acf1bde
-2023-10-27 15:55:21,473 - INFO - hm_set_listener: Message server = OK.
-2023-10-27 15:55:21,473 - INFO - hm_set_listener: File server = OK.
-2023-10-27 15:55:27,565 - INFO - thread_main: 3
-2023-10-27 15:55:27,565 - INFO - c197bbe5-e373-4241-8fe3-cec73acf1bde - hm_send_message: Sent!
-2023-10-27 15:55:29,218 - INFO - thread_main: 3
-2023-10-27 15:55:29,219 - INFO - c197bbe5-e373-4241-8fe3-cec73acf1bde - hm_send_message: Sent!
-2023-10-27 15:55:36,121 - INFO - thread_main: 3
-2023-10-27 15:55:36,121 - INFO - c197bbe5-e373-4241-8fe3-cec73acf1bde - hm_send_message: Sent!
-2023-10-27 15:55:38,340 - INFO - thread_main: 6
-2023-10-27 15:55:38,340 - INFO - hm_close: c197bbe5-e373-4241-8fe3-cec73acf1bde
-2023-10-27 15:55:38,340 - INFO - hm_close: Message server is closed.
-2023-10-27 15:55:38,340 - INFO - hm_close: File server of is closed.
-2023-10-27 15:55:38,341 - INFO - hm_close: Message writer of is closed.
-2023-10-27 15:55:40,534 - INFO - thread_main: 6
-2023-10-27 15:55:40,534 - INFO - hm_close: c197bbe5-e373-4241-8fe3-cec73acf1bde
-2023-10-27 15:55:41,688 - INFO - thread_main: 0
-2023-10-27 15:55:41,688 - INFO - hm_exit: Active peersockets = 0
-2023-10-27 15:55:41,688 - INFO - hm_exit: Exiting PeerConn..
-2023-10-27 15:55:42,696 - INFO - UI-on_exit: Executed.
+2023-11-01 21:03:57,329 - INFO - _configure_logging: OK.
+2023-11-01 21:03:57,335 - INFO - get_ipv4_address: WiFi 2 192.168.1.202.
+2023-11-01 21:03:57,341 - INFO - configuration_file: Configurations are set.
+2023-11-01 21:03:57,341 - INFO - PeerConn: Initialized.
+2023-11-01 21:03:57,370 - DEBUG - Using proactor: IocpProactor
+2023-11-01 21:03:57,608 - INFO - UI-set_user_data_ui: Set.
+2023-11-01 21:03:57,609 - INFO - thread_main: Running.
+2023-11-01 21:03:57,609 - INFO - UI-set_buttons: Set.
+2023-11-01 21:03:57,611 - INFO - UI-set_QListViews: Initialized
+2023-11-01 21:03:57,611 - INFO - UI-PeerConnGUI: Initialized.
+2023-11-01 21:04:00,709 - INFO - UI-listen_dialog: Executed.
+2023-11-01 21:04:05,939 - INFO - create_peer_socket: c8c95611-289e-4215-9d45-6b91a84f5b2c
+2023-11-01 21:04:05,939 - INFO - set_peersocket: c8c95611-289e-4215-9d45-6b91a84f5b2c
+2023-11-01 21:04:05,946 - INFO - thread_main: 1
+2023-11-01 21:04:05,947 - INFO - hm_set_server: c8c95611-289e-4215-9d45-6b91a84f5b2c
+2023-11-01 21:04:05,947 - INFO - hm_set_server: Message server = OK.
+2023-11-01 21:04:05,948 - INFO - hm_set_server: File server = OK.
+2023-11-01 21:04:08,091 - INFO - UI-change_configs_dialog: Executed.
+2023-11-01 21:04:20,531 - INFO - thread_main: 8
+2023-11-01 21:04:20,531 - INFO - hm_close: c8c95611-289e-4215-9d45-6b91a84f5b2c
+2023-11-01 21:04:20,531 - INFO - hm_close: Message server is closed.
+2023-11-01 21:04:20,531 - INFO - hm_close: File server of is closed.
+2023-11-01 21:04:21,721 - INFO - thread_main: 8
+2023-11-01 21:04:21,722 - INFO - hm_close: c8c95611-289e-4215-9d45-6b91a84f5b2c
+2023-11-01 21:04:27,756 - INFO - thread_main: 0
+2023-11-01 21:04:27,756 - INFO - hm_exit: Active peersockets = 0
+2023-11-01 21:04:27,756 - INFO - hm_exit: Exiting PeerConn..
+2023-11-01 21:04:28,777 - INFO - UI-on_exit: Executed.
