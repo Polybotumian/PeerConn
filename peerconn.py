@@ -1,34 +1,22 @@
-from models import (dataclass, StreamReader, StreamWriter, datetime, PeerData,
+from models import (StreamReader, StreamWriter, datetime, PeerData,
                     Message, History, Servers, Streams, PeerSocket,
                     FileData, MessageTypes, Events)
 from uuid import uuid4
 from asyncio import (start_server, open_connection, create_task, get_running_loop, sleep, wait_for, TimeoutError,
-                     CancelledError, IncompleteReadError, AbstractEventLoop, Event, Queue)
+                     CancelledError, IncompleteReadError, Event, Queue)
 from socket import gethostname, AF_INET
 from typing import List
 from pickle import dumps as pickle_dumps, loads as picke_loads
 from logging import basicConfig, DEBUG as LOGGING_DEBUG, getLogger, Logger
 from psutil import net_if_addrs
 from os import path, makedirs
-from sys import argv as sys_argv
 from ipaddress import ip_address
 from json import dumps as json_dumps, dump as json_dump, loads as json_loads
-# from zipfile import ZipFile, ZIP_DEFLATED
 
-class PeerConn:
-    _peersockets:       List[PeerSocket] | None
-    _peerdata:                  PeerData | None
-    _SLEEP_TIME:                    float = 0.1
-    _logger:                      Logger | None
-    _loop:             AbstractEventLoop | None
-    _command_event:                Event | None
-    _command_queue:                Queue | None
-    log_filename:                     str = 'peerconn.log'
-    _file_delimiter:               bytes | None = b'PEERCONN_DELIMETER'
-    _BASE_PATH:                       str = path.abspath(path.dirname(sys_argv[0]))
-    _DOWNLOADS_DIR:                str = path.join(_BASE_PATH, 'downloads')
-    _config_path:                     str = path.join(_BASE_PATH, 'config.json')
+from peerconn_commands import Commands
 
+class PeerConn(Commands):
+    """Main class for gathering seperate PeerConn classes and accessibility."""
     def __init__(self) -> None:
         self._configure_logging()
         self._peersockets = []
@@ -578,114 +566,6 @@ class PeerConn:
         self._logger.error(f'{self.get_ipv4_address.__name__}: Cannot found!')
         return None
 
-    @dataclass
-    class CommandTypes:
-        exit: int = 0
-        set_listener: int = 1
-        connect: int = 2
-        send_message: int = 3
-        send_file: int = 4
-        cancel_file: int = 5
-        change_download_dir: int = 6
-        config_file: int = 7
-        close: int = 8
-        close_all: int = 9
-
-    @dataclass
-    class Command:
-        type: int = None
-        socket_id: str = None
-        peerdata: PeerData = None
-        message: str = None
-        file_path: str = None
-        activate: bool = None
-
-    def set_listener(self, peersocket_id: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.set_listener,
-                    socket_id= peersocket_id
-                )
-        )
-
-    def connect(self, peersocket_id: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.connect,
-                    socket_id= peersocket_id
-                )
-        )
-
-    def send_message(self, peersocket_id: str, message: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.send_message,
-                    socket_id= peersocket_id,
-                    message= message
-                )
-        )
-
-    def send_file(self, peersocket_id: str, file_path: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.send_file,
-                    socket_id= peersocket_id,
-                    file_path= file_path
-                )
-        )
-
-    def cancel_file(self, peersocket_id: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.cancel_file,
-                    socket_id= peersocket_id,
-                )
-        )
-
-    def change_download_dir(self, dir_path: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.change_download_dir,
-                    file_path= dir_path
-                )
-        )
-
-    def config_file(self, save) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.config_file,
-                    activate = save
-                )
-        )
-
-    def close(self, peersocket_id: str) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.close,
-                    socket_id= peersocket_id,
-                )
-        )
-
-    def close_all(self) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.close_all
-                )
-        )
-
-    def exit(self) -> None:
-        self._queue_command(
-            PeerConn.Command(
-                    type= PeerConn.CommandTypes.exit
-                )
-        )
-
-    def _queue_command(self, command: Command) -> None:
-        self._loop.call_soon_threadsafe(
-                self._command_queue.put_nowait,
-                command
-            )
-
     async def thread_main(self) -> None:
         try:
             self._logger.info(f'{self.thread_main.__name__}: Running.')
@@ -694,22 +574,22 @@ class PeerConn:
                 try:
                     command: PeerConn.Command = await self._command_queue.get()
                     self._logger.info(f'{self.thread_main.__name__}: {command.type}')
-                    if command.type == PeerConn.CommandTypes.set_listener:
-                        await self.hm_set_server(command.socket_id)
+                    if command.type == PeerConn.CommandTypes.set_server:
+                        await self.hm_set_server(command.content[0])
                     elif command.type == PeerConn.CommandTypes.connect:
-                        await self.hm_connect(command.socket_id)
+                        await self.hm_connect(command.content[0])
                     elif command.type == PeerConn.CommandTypes.send_message:
-                        await self.hm_send_message(command.socket_id, command.message)
+                        await self.hm_send_message(command.content[0], command.content[1])
                     elif command.type == PeerConn.CommandTypes.send_file:
-                        create_task(self.hm_send_file(command.socket_id, command.file_path))
+                        create_task(self.hm_send_file(command.content[0], command.content[1]))
                     elif command.type == PeerConn.CommandTypes.cancel_file:
-                        self.get_socket(command.socket_id).events.file_event_stream.set()
+                        self.get_socket(command.content[0]).events.file_event_stream.set()
                     elif command.type == PeerConn.CommandTypes.change_download_dir:
-                        PeerConn._DOWNLOADS_DIR = command.file_path
+                        PeerConn._DOWNLOADS_DIR = command.content[0]
                     elif command.type == PeerConn.CommandTypes.config_file:
-                        self.configuration_file(command.activate)
+                        self.configuration_file(command.content[0])
                     elif command.type == PeerConn.CommandTypes.close:
-                        await self.hm_close(command.socket_id)
+                        await self.hm_close(command.content[0])
                     elif command.type == PeerConn.CommandTypes.close_all:
                         await self.hm_close_all()
                     elif command.type == PeerConn.CommandTypes.exit:
