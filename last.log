@@ -1,15 +1,14 @@
-2023-11-13 20:53:17,243 - INFO - _configure_logging: OK.
-2023-11-13 20:53:17,251 - INFO - get_ipv4_address: WiFi 2 192.168.1.202.
-2023-11-13 20:53:17,252 - INFO - configuration_file: Configurations are set.
-2023-11-13 20:53:17,252 - INFO - PeerConn: Initialized.
-2023-11-13 20:53:17,269 - DEBUG - Using proactor: IocpProactor
-2023-11-13 20:53:17,527 - INFO - UI-set_user_data_ui: Set.
-2023-11-13 20:53:17,527 - INFO - UI-set_buttons: Set.
-2023-11-13 20:53:17,528 - INFO - thread_main: Running.
-2023-11-13 20:53:17,528 - INFO - UI-set_QListViews: Initialized
-2023-11-13 20:53:17,528 - INFO - UI-PeerConnGUI: Initialized.
-2023-11-13 20:53:19,879 - INFO - UI-change_configs_dialog: Executed.
-2023-11-13 20:54:28,924 - INFO - thread_main: 0
-2023-11-13 20:54:28,924 - INFO - hm_exit: Active peersockets = 0
-2023-11-13 20:54:28,924 - INFO - hm_exit: Exiting PeerConn..
-2023-11-13 20:54:29,945 - INFO - UI-on_exit: Executed.
+2023-11-14 09:18:01,234 - INFO - _configure_logging: OK.
+2023-11-14 09:18:01,241 - INFO - get_ipv4_address: WiFi 2 10.4.11.214.
+2023-11-14 09:18:01,242 - INFO - configuration_file: Configurations are set.
+2023-11-14 09:18:01,242 - INFO - PeerConn: Initialized.
+2023-11-14 09:18:01,272 - DEBUG - Using proactor: IocpProactor
+2023-11-14 09:18:01,745 - INFO - UI-set_user_data_ui: Set.
+2023-11-14 09:18:01,745 - INFO - thread_main: Running.
+2023-11-14 09:18:01,746 - INFO - UI-set_buttons: Set.
+2023-11-14 09:18:01,748 - INFO - UI-set_QListViews: Initialized
+2023-11-14 09:18:01,749 - INFO - UI-PeerConnGUI: Initialized.
+2023-11-14 09:18:03,577 - INFO - thread_main: 0
+2023-11-14 09:18:03,577 - INFO - hm_exit: Active peersockets = 0
+2023-11-14 09:18:03,577 - INFO - hm_exit: Exiting PeerConn..
+2023-11-14 09:18:04,602 - INFO - UI-on_exit: Executed.

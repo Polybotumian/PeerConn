@@ -1,4 +1,4 @@
-from models import (StreamReader, StreamWriter, datetime, PeerData,
+from peerconn_models import (StreamReader, StreamWriter, datetime, PeerData,
                     Message, History, Servers, Streams, PeerSocket,
                     FileData, MessageTypes, Events)
 from uuid import uuid4

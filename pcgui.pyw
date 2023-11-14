@@ -276,7 +276,7 @@ class PeerConnGUI:
                     peerdata = PeerData(display_name, local_address, msg_port, file_port)
                     id = self._peerconn.create_peer_socket()
                     self._peerconn.set_peersocket(id, peerdata)
-                    self._peerconn.set_listener(id)
+                    self._peerconn.set_server(id)
                     item = QStandardItem(peerdata.name)
                     item.setToolTip(f'Address: {peerdata.local_address}\nMessage Port: {peerdata.msg_port}\nFile Port: {peerdata.file_port}')
                     item.setIcon(self.icon_server_waiting)

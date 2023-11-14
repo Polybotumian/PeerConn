@@ -1,5 +1,5 @@
 from peerconn_variables import Variables
-from models import (dataclass)
+from peerconn_models import (dataclass)
 
 class Commands(Variables):
     """Has command definations for ability of use async functions within sync script."""

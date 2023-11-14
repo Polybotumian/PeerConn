@@ -1,4 +1,4 @@
-from models import ( PeerData, PeerSocket)
+from peerconn_models import ( PeerData, PeerSocket)
 from asyncio import (AbstractEventLoop, Event, Queue)
 from typing import List
 from logging import Logger
