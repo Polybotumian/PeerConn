@@ -1,8 +1,9 @@
-from dataclasses import dataclass, field
-from asyncio import AbstractServer, Event
-from asyncio.streams import StreamReader, StreamWriter
-from datetime import datetime
-from typing import List
+from dataclasses import (dataclass, field)
+from asyncio import (AbstractServer, Event)
+from asyncio.streams import (StreamReader, StreamWriter)
+from datetime import (datetime)
+from typing import (List)
+from cryptography.fernet import (Fernet)
 
 class MessageTypes:
     ME:                     int = 0
@@ -34,6 +35,15 @@ class Message:
     content:        str | None = 'message_content'  # Content of the message
     date_time: datetime | None = None               # Indicates when the message was sent/received
     type:           int | None = None
+
+@dataclass
+class PeerPacket:
+    sender:             PeerData | None = None
+    key:                str | None = None
+    target:             str | None = None
+    message:        Message | None = None
+    file_data:     FileData | None = None
+    file_bytes:       bytes | None = None
 
 # Data class to manage message history
 @dataclass
@@ -75,3 +85,5 @@ class PeerSocket:
     file_comm_connected:    bool = False                 # Indicates whether the file communication established
     in_file_transaction:    bool = False
     file_percentage:            int | None = 0
+    key:                        str | None = None
+    chiper_suite:            Fernet | None = None

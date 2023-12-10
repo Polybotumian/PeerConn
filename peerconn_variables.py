@@ -1,9 +1,9 @@
 from peerconn_models import ( PeerData, PeerSocket)
 from asyncio import (AbstractEventLoop, Event, Queue)
-from typing import List
-from logging import Logger
-from os import path
-from sys import argv as sys_argv
+from typing import (List)
+from logging import (Logger)
+from os import (path)
+from sys import (argv as sys_argv)
 
 class Variables:
     """Basis variables defined for PeerConn."""

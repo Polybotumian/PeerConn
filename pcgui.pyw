@@ -1,145 +1,18 @@
-from gui import Ui_MainWindow
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QMenu, QAction, QDialog, QLabel, QFormLayout, 
-                             QLineEdit, QMessageBox, QFileDialog, QSpinBox)
-from PyQt5.QtCore import Qt, QPoint, QThread, pyqtSignal, QTimer
-from PyQt5.QtGui import QColor, QIcon, QStandardItemModel, QStandardItem
-from sys import argv as sys_argv, exit as sys_exit
-from peerconn import PeerConn, PeerData, MessageTypes
-from asyncio import run as async_run
-from time import sleep
-from os import path
-from functools import partial
-
-class PeerConnThread(QThread):
-    peerconn_ref: PeerConn | None
-    terminate_thread = pyqtSignal()
-
-    def __init__(self, peerconn_ref: PeerConn) -> None:
-        super().__init__()
-        self.peerconn_ref = peerconn_ref
-
-    def run(self) -> None:
-        async_run(self.peerconn_ref.thread_main())
-        self.terminate_thread.emit()
-
-class DialogListen(QDialog):
-    def __init__(self, local_address: str) -> None:
-        super().__init__()
-        self.setWindowTitle('Create Listener')
-        self.setMinimumSize(240, 200)
-        self.setMaximumHeight(200)
-        self.setWhatsThis('To create a listener/server.')
-        layout = QFormLayout()
-        self.QLineEdit_display_name = QLineEdit()
-        layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
-        self.QLineEdit_local_address = QLineEdit(local_address)
-        layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
-        self.QSpinBox_msg_port = QSpinBox()
-        self.QSpinBox_msg_port.setMinimum(49152)
-        self.QSpinBox_msg_port.setMaximum(65535 )
-        layout.addRow(QLabel('Message Port'), self.QSpinBox_msg_port)
-        self.QSpinBox_file_port = QSpinBox()
-        self.QSpinBox_file_port.setMinimum(49152)
-        self.QSpinBox_file_port.setMaximum(65535 )
-        layout.addRow(QLabel('File Port'), self.QSpinBox_file_port)
-        self.QPushButton_create_listener = QPushButton('Create')
-        self.QPushButton_create_listener.clicked.connect(self.accept)
-        layout.addRow(self.QPushButton_create_listener)
-        self.QPushButton_cancel = QPushButton('Cancel')
-        self.QPushButton_cancel.clicked.connect(self.reject)
-        layout.addRow(self.QPushButton_cancel)
-        self.setLayout(layout)
-
-class DialogConnect(QDialog):
-    def __init__(self) -> None:
-        super().__init__()
-        self.setWindowTitle('Create Connection')
-        self.setMinimumSize(240, 200)
-        self.setMaximumHeight(200)
-        self.setWhatsThis('To connect a listener/server.')
-        layout = QFormLayout()
-        self.QLineEdit_display_name = QLineEdit()
-        layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
-        self.QLineEdit_local_address = QLineEdit()
-        layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
-        self.QSpinBox_msg_port = QSpinBox()
-        self.QSpinBox_msg_port.setMinimum(49152)
-        self.QSpinBox_msg_port.setMaximum(65535 )
-        layout.addRow(QLabel('Message Port'), self.QSpinBox_msg_port)
-        self.QSpinBox_file_port = QSpinBox()
-        self.QSpinBox_file_port.setMinimum(49152)
-        self.QSpinBox_file_port.setMaximum(65535 )
-        layout.addRow(QLabel('File Port'), self.QSpinBox_file_port)
-        self.QPushButton_create_listener = QPushButton('Connect')
-        self.QPushButton_create_listener.clicked.connect(self.accept)
-        layout.addRow(self.QPushButton_create_listener)
-        self.QPushButton_cancel = QPushButton('Cancel')
-        self.QPushButton_cancel.clicked.connect(self.reject)
-        layout.addRow(self.QPushButton_cancel)
-        self.setLayout(layout)
-
-class DialogEditConnectionItem(QDialog):
-    def __init__(self, peerdata: PeerData) -> None:
-        super().__init__()
-        # self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
-        self.setWindowTitle(f'Edit {peerdata.name}')
-        self.setMinimumSize(240, 200)
-        self.setMaximumHeight(200)
-        self.setWhatsThis('Here you can only edit name of the peersocket.')
-        layout = QFormLayout()
-        self.QLineEdit_display_name = QLineEdit(peerdata.name)
-        layout.addRow(QLabel('Display Name'), self.QLineEdit_display_name)
-        self.QLineEdit_local_address = QLineEdit(peerdata.local_address)
-        self.QLineEdit_local_address.setReadOnly(True)
-        layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
-        self.QLineEdit_msg_port = QLineEdit(str(peerdata.msg_port))
-        self.QLineEdit_msg_port.setReadOnly(True)
-        layout.addRow(QLabel('Message Port'), self.QLineEdit_msg_port)
-        self.QLineEdit_file_port = QLineEdit(str(peerdata.file_port))
-        self.QLineEdit_file_port.setReadOnly(True)
-        layout.addRow(QLabel('File Port'), self.QLineEdit_file_port)
-        self.QPushButton_save_changes = QPushButton('Save')
-        self.QPushButton_save_changes.clicked.connect(self.accept)
-        layout.addRow(self.QPushButton_save_changes)
-        self.QPushButton_cancel = QPushButton('Cancel')
-        self.QPushButton_cancel.clicked.connect(self.reject)
-        layout.addRow(self.QPushButton_cancel)
-        self.setLayout(layout)
-
-class DialogChangeConfigs(QDialog):
-    def __init__(self, peerdata: PeerData, download_dir_path: str) -> None:
-        super().__init__()
-        self.setWindowTitle(f'Edit Configurations')
-        self.setMinimumSize(240, 200)
-        self.setMaximumHeight(200)
-        self.setWhatsThis('Here is your main configurations.'
-                          'You can change and changes will be saved'
-                          'except "Address".')
-        layout = QFormLayout()
-        self.QLineEdit_display_name = QLineEdit(peerdata.name)
-        layout.addRow(QLabel('Host Name'), self.QLineEdit_display_name)
-        self.QLineEdit_local_address = QLineEdit(peerdata.local_address)
-        layout.addRow(QLabel('Address'), self.QLineEdit_local_address)
-        self.QLineEdit_download_dir_path = QLineEdit(download_dir_path)
-        layout.addRow(QLabel('Directory Path'), self.QLineEdit_download_dir_path)
-        self.QPushButton_pick_dir = QPushButton('Pick Dir')
-        def directory_dialog():
-            directory_path = QFileDialog.getExistingDirectory(self, "Select Directory")
-            if directory_path:
-                self.QLineEdit_download_dir_path.setText(directory_path)
-        self.QPushButton_pick_dir.clicked.connect(directory_dialog)
-        layout.addRow(self.QPushButton_pick_dir)
-        self.QPushButton_save_changes = QPushButton('Save')
-        self.QPushButton_save_changes.clicked.connect(self.accept)
-        layout.addRow(self.QPushButton_save_changes)
-        self.QPushButton_cancel = QPushButton('Cancel')
-        self.QPushButton_cancel.clicked.connect(self.reject)
-        layout.addRow(self.QPushButton_cancel)
-        self.setLayout(layout)
+from gui import (Ui_MainWindow)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QAction, QDialog, QLineEdit, QMessageBox, QFileDialog)
+from PyQt5.QtCore import (Qt, QPoint, QTimer)
+from PyQt5.QtGui import (QColor, QIcon, QStandardItemModel, QStandardItem)
+from sys import (argv as sys_argv, exit as sys_exit)
+from peerconn import (PeerConn, PeerData, MessageTypes)
+from time import (sleep)
+from os import (path)
+from functools import (partial)
+from gui_dialogs import (DialogChangeConfigs, DialogEditConnectionItem, DialogConnect, DialogListen)
+from gui_threads import (PeerConnThread)
 
 class PeerConnGUI:
     # Main Window Constants
-    MAIN_WINDOW_TITLE: str = 'PeerConn - GUI (v231030)'
+    MAIN_WINDOW_TITLE: str = 'PeerConn - GUI (v231217)'
     # Properties
     _peerconn:                        PeerConn | None = None
     _peerconn_thread:           PeerConnThread | None = None
@@ -200,7 +73,7 @@ class PeerConnGUI:
         self._ui.actionPreferences.setEnabled(False)
         self._ui.actionHelp.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(1))
         self._ui.actionAbout.triggered.connect(lambda:self._ui.stackedWidget.setCurrentIndex(2))
-        self._ui.actionChange_My_Data.triggered.connect(self.change_configs_dialog)
+        self._ui.actionChange_My_Data.triggered.connect(self.show_change_configs_dialog)
 
     def set_user_data_ui(self) -> None:
         self._ui.lineEdit_user_hostname.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -214,8 +87,8 @@ class PeerConnGUI:
         self._peerconn._logger.info(f'UI-{self.set_user_data_ui.__name__}: Set.')
 
     def set_buttons(self) -> None:
-        self._ui.pushButton_listen.clicked.connect(self.listen_dialog)
-        self._ui.pushButton_connect.clicked.connect(self.connect_dialog)
+        self._ui.pushButton_listen.clicked.connect(self.show_listen_dialog)
+        self._ui.pushButton_connect.clicked.connect(self.show_connect_dialog)
         self._ui.pushButton_send_message.clicked.connect(self.send_message)
         self._ui.pushButton_send_message.setEnabled(False)
         self._ui.pushButton_about_back.clicked.connect(lambda:self._ui.stackedWidget.setCurrentIndex(0))
@@ -263,10 +136,10 @@ class PeerConnGUI:
         if file_path:
             line_edit.setText(file_path)
 
-    def listen_dialog(self) -> None:
+    def show_listen_dialog(self) -> None:
         try:
             self._dialog = DialogListen(self._peerconn._peerdata.local_address)
-            self._peerconn._logger.info(f'UI-{self.listen_dialog.__name__}: Executed.')
+            self._peerconn._logger.info(f'UI-{self.show_listen_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 display_name = self._dialog.QLineEdit_display_name.text()
                 local_address = self._dialog.QLineEdit_local_address.text()
@@ -290,12 +163,12 @@ class PeerConnGUI:
                     message_box.addButton(QMessageBox.StandardButton.Ok)
                     message_box.exec_()
         except Exception as ex:
-            self._peerconn._logger.error(f'UI-{self.listen_dialog.__name__}: {ex}')
+            self._peerconn._logger.error(f'UI-{self.show_listen_dialog.__name__}: {ex}')
 
-    def connect_dialog(self) -> None:
+    def show_connect_dialog(self) -> None:
         try:
             self._dialog = DialogConnect()
-            self._peerconn._logger.info(f'UI-{self.connect_dialog.__name__}: Executed.')
+            self._peerconn._logger.info(f'UI-{self.show_connect_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 display_name = self._dialog.QLineEdit_display_name.text()
                 local_address = self._dialog.QLineEdit_local_address.text()
@@ -318,15 +191,15 @@ class PeerConnGUI:
                     message_box.addButton(QMessageBox.StandardButton.Ok)
                     message_box.exec_()
         except Exception as ex:
-            self._peerconn._logger.error(f'UI-{self.connect_dialog.__name__}: {ex}')
+            self._peerconn._logger.error(f'UI-{self.show_connect_dialog.__name__}: {ex}')
 
-    def edit_connection_item_dialog(self) -> None:
+    def show_edit_connection_item_dialog(self) -> None:
         try:
             index = self._ui.listView_sockets.currentIndex()
             item = self._model_socket_list.itemFromIndex(index)
             peersocket_id = item.data(Qt.ItemDataRole.UserRole + 1)
             self._dialog = DialogEditConnectionItem(self._peerconn.get_socket(peersocket_id).peerdata)
-            self._peerconn._logger.info(f'UI-{self.edit_connection_item_dialog.__name__}: Executed.')
+            self._peerconn._logger.info(f'UI-{self.show_edit_connection_item_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 display_name = self._dialog.QLineEdit_display_name.text()
                 local_address = self._dialog.QLineEdit_local_address.text()
@@ -337,13 +210,13 @@ class PeerConnGUI:
                 self._peerconn.set_peersocket(peersocket_id, peerdata)
                 self._model_socket_list.itemFromIndex(index).setText(peerdata.name)
         except Exception as ex:
-            self._peerconn._logger.error(f'UI-{self.edit_connection_item_dialog.__name__}: {ex}')
+            self._peerconn._logger.error(f'UI-{self.show_edit_connection_item_dialog.__name__}: {ex}')
 
-    def change_configs_dialog(self) -> None:
+    def show_change_configs_dialog(self) -> None:
         try:
             self._dialog = DialogChangeConfigs(self._peerconn._peerdata, self._peerconn._DOWNLOADS_DIR)
             message_box = QMessageBox()
-            self._peerconn._logger.info(f'UI-{self.change_configs_dialog.__name__}: Executed.')
+            self._peerconn._logger.info(f'UI-{self.show_change_configs_dialog.__name__}: Executed.')
             if self._dialog.exec_() == QDialog.DialogCode.Accepted:
                 if len(self._dialog.QLineEdit_display_name.text()) > 0:
                     self._peerconn._peerdata.name = self._dialog.QLineEdit_display_name.text()
@@ -388,7 +261,7 @@ class PeerConnGUI:
                 self._ui.lineEdit_user_local_address.setText(self._peerconn._peerdata.local_address)
                 self._peerconn.config_file(True)
         except Exception as ex:
-            self._peerconn._logger.error(f'UI-{self.change_configs_dialog.__name__}: {ex}')
+            self._peerconn._logger.error(f'UI-{self.show_change_configs_dialog.__name__}: {ex}')
 
     def set_QListViews(self) -> None:
         self._model_socket_list = QStandardItemModel()
@@ -416,7 +289,7 @@ class PeerConnGUI:
             item = self._model_socket_list.itemFromIndex(index)
             item_id = item.data(Qt.ItemDataRole.UserRole + 1)
             if action == edit_action:
-                self.edit_connection_item_dialog()
+                self.show_edit_connection_item_dialog()
             elif action == disconnect_action:
                 self._peerconn.close(item_id)
             elif action == remove_action:
