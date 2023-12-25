@@ -1,41 +1,34 @@
-2023-12-08 16:27:32,637 - INFO - _configure_logging: OK.
-2023-12-08 16:27:32,643 - INFO - get_ipv4_address: Wi-Fi 2 192.168.1.202.
-2023-12-08 16:27:32,644 - INFO - configuration_file: Configurations are set.
-2023-12-08 16:27:32,644 - INFO - PeerConn: Initialized.
-2023-12-08 16:27:32,701 - DEBUG - Using proactor: IocpProactor
-2023-12-08 16:27:32,999 - INFO - UI-set_user_data_ui: Set.
-2023-12-08 16:27:33,000 - INFO - thread_main: Running.
-2023-12-08 16:27:33,000 - INFO - UI-set_buttons: Set.
-2023-12-08 16:27:33,005 - INFO - UI-set_QListViews: Initialized
-2023-12-08 16:27:33,005 - INFO - UI-PeerConnGUI: Initialized.
-2023-12-08 16:27:37,637 - INFO - UI-show_listen_dialog: Executed.
-2023-12-08 16:27:43,819 - INFO - create_peer_socket: fa22ffdb-0c79-4e9b-a45a-ea078a24744e
-2023-12-08 16:27:43,819 - INFO - set_peersocket: fa22ffdb-0c79-4e9b-a45a-ea078a24744e
-2023-12-08 16:27:43,857 - INFO - thread_main: 1
-2023-12-08 16:27:43,859 - INFO - hm_set_server: fa22ffdb-0c79-4e9b-a45a-ea078a24744e
-2023-12-08 16:27:43,859 - INFO - create_key: OK.
-2023-12-08 16:27:43,860 - INFO - hm_set_server: Message server = OK.
-2023-12-08 16:27:43,860 - INFO - hm_set_server: File server = OK.
-2023-12-08 16:27:57,624 - INFO - exchange_key: OK.
-2023-12-08 16:28:00,120 - INFO - thread_main: 3
-2023-12-08 16:28:00,210 - INFO - fa22ffdb-0c79-4e9b-a45a-ea078a24744e - hm_send_message: Sent!
-2023-12-08 16:28:11,698 - INFO - thread_main: 3
-2023-12-08 16:28:11,698 - INFO - fa22ffdb-0c79-4e9b-a45a-ea078a24744e - hm_send_message: Sent!
-2023-12-08 16:28:17,506 - INFO - thread_main: 3
-2023-12-08 16:28:17,506 - INFO - fa22ffdb-0c79-4e9b-a45a-ea078a24744e - hm_send_message: Sent!
-2023-12-08 16:29:06,456 - INFO - thread_main: 4
-2023-12-08 16:29:06,457 - INFO - fa22ffdb-0c79-4e9b-a45a-ea078a24744e - hm_send_file: Sending a file: FileData(name='basic_sesli_etiket', extension='.drawio', size=3467)
-2023-12-08 16:29:06,559 - INFO - fa22ffdb-0c79-4e9b-a45a-ea078a24744e - hm_send_file: Sent!
-2023-12-08 16:29:15,386 - INFO - thread_main: 8
-2023-12-08 16:29:15,386 - INFO - hm_close: fa22ffdb-0c79-4e9b-a45a-ea078a24744e
-2023-12-08 16:29:15,386 - INFO - hm_close: Message server is closed.
-2023-12-08 16:29:15,386 - INFO - hm_close: File server of is closed.
-2023-12-08 16:29:15,387 - INFO - hm_close: Message writer of is closed.
-2023-12-08 16:29:15,387 - INFO - fa22ffdb-0c79-4e9b-a45a-ea078a24744e - _server_incomming_files: Disconnected from file socket.
-2023-12-08 16:29:15,387 - INFO - hm_close: File writer of is closed.
-2023-12-08 16:29:21,154 - INFO - thread_main: 8
-2023-12-08 16:29:21,154 - INFO - hm_close: fa22ffdb-0c79-4e9b-a45a-ea078a24744e
-2023-12-08 16:29:22,730 - INFO - thread_main: 0
-2023-12-08 16:29:22,730 - INFO - hm_exit: Active peersockets = 0
-2023-12-08 16:29:22,730 - INFO - hm_exit: Exiting PeerConn..
-2023-12-08 16:29:23,758 - INFO - UI-on_exit: Executed.
+2023-12-26 02:48:49,913 - INFO - _configure_logging: OK.
+2023-12-26 02:48:49,918 - INFO - get_ipv4_address: Wi-Fi 2 192.168.1.202.
+2023-12-26 02:48:49,919 - INFO - configuration_file: Configurations are set.
+2023-12-26 02:48:49,919 - INFO - PeerConn: Initialized.
+2023-12-26 02:48:49,929 - DEBUG - Using proactor: IocpProactor
+2023-12-26 02:48:50,141 - INFO - UI-set_user_data_ui: Set.
+2023-12-26 02:48:50,142 - INFO - UI-set_buttons: Set.
+2023-12-26 02:48:50,142 - INFO - UI-set_QListViews: Initialized
+2023-12-26 02:48:50,143 - INFO - thread_main: Running.
+2023-12-26 02:48:50,143 - INFO - UI-PeerConnGUI: Initialized.
+2023-12-26 02:48:59,594 - INFO - UI-show_listen_dialog: Executed.
+2023-12-26 02:49:02,774 - INFO - create_peer_socket: 27dc5669-eb77-4728-a46f-15ff45be2b0e
+2023-12-26 02:49:02,774 - INFO - set_peersocket: 27dc5669-eb77-4728-a46f-15ff45be2b0e
+2023-12-26 02:49:02,775 - INFO - thread_main: 1
+2023-12-26 02:49:02,775 - INFO - hm_set_server: 27dc5669-eb77-4728-a46f-15ff45be2b0e
+2023-12-26 02:49:02,775 - INFO - create_key: OK.
+2023-12-26 02:49:02,775 - INFO - hm_set_server: Message server = OK.
+2023-12-26 02:49:02,775 - INFO - hm_set_server: File server = OK.
+2023-12-26 02:49:05,752 - INFO - exchange_key_msg: OK.
+2023-12-26 02:49:07,954 - INFO - thread_main: 3
+2023-12-26 02:49:07,995 - INFO - 27dc5669-eb77-4728-a46f-15ff45be2b0e - hm_send_message: Sent!
+2023-12-26 02:49:12,955 - INFO - thread_main: 4
+2023-12-26 02:49:12,955 - INFO - 27dc5669-eb77-4728-a46f-15ff45be2b0e - hm_send_file: Sending a file: FileData(name='byteopus_wtext', extension='.png', size=3885)
+2023-12-26 02:49:13,056 - INFO - 27dc5669-eb77-4728-a46f-15ff45be2b0e - hm_send_file: Sent!
+2023-12-26 02:49:14,418 - INFO - thread_main: 0
+2023-12-26 02:49:14,418 - INFO - hm_close: 27dc5669-eb77-4728-a46f-15ff45be2b0e
+2023-12-26 02:49:14,418 - INFO - hm_close: Message server is closed.
+2023-12-26 02:49:14,418 - INFO - hm_close: File server of is closed.
+2023-12-26 02:49:14,418 - INFO - hm_close: Message writer of is closed.
+2023-12-26 02:49:14,418 - INFO - 27dc5669-eb77-4728-a46f-15ff45be2b0e - _server_incomming_files: Disconnected from file socket.
+2023-12-26 02:49:14,418 - INFO - hm_close: File writer of is closed.
+2023-12-26 02:49:14,418 - INFO - hm_exit: Active peersockets = 0
+2023-12-26 02:49:14,418 - INFO - hm_exit: Exiting PeerConn..
+2023-12-26 02:49:15,421 - INFO - UI-on_exit: Executed.

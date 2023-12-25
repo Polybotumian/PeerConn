@@ -1,32 +1,27 @@
-2023-12-08 16:27:24,713 - INFO - _configure_logging: OK.
-2023-12-08 16:27:24,718 - INFO - get_ipv4_address: Wi-Fi 2 192.168.1.202.
-2023-12-08 16:27:24,718 - INFO - configuration_file: Configurations are set.
-2023-12-08 16:27:24,718 - INFO - PeerConn: Initialized.
-2023-12-08 16:27:24,730 - DEBUG - Using proactor: IocpProactor
-2023-12-08 16:27:25,145 - INFO - UI-set_user_data_ui: Set.
-2023-12-08 16:27:25,146 - INFO - UI-set_buttons: Set.
-2023-12-08 16:27:25,146 - INFO - UI-set_QListViews: Initialized
-2023-12-08 16:27:25,147 - INFO - thread_main: Running.
-2023-12-08 16:27:25,147 - INFO - UI-PeerConnGUI: Initialized.
-2023-12-08 16:27:45,783 - INFO - UI-show_connect_dialog: Executed.
-2023-12-08 16:27:57,622 - INFO - create_peer_socket: bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6
-2023-12-08 16:27:57,622 - INFO - set_peersocket: bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6
-2023-12-08 16:27:57,622 - INFO - thread_main: 2
-2023-12-08 16:27:57,622 - INFO - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - hm_connect: 192.168.1.202: 49152, 49153
-2023-12-08 16:27:57,622 - INFO - create_key: OK.
-2023-12-08 16:27:57,623 - INFO - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - hm_connect: Message server = OK.
-2023-12-08 16:27:57,623 - INFO - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - hm_connect: File server = OK.
-2023-12-08 16:27:57,624 - INFO - exchange_key: OK.
-2023-12-08 16:28:05,257 - INFO - thread_main: 3
-2023-12-08 16:28:05,258 - INFO - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - hm_send_message: Sent!
-2023-12-08 16:29:06,457 - INFO - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - _server_incomming_files: Receiving a file: FileData(name='basic_sesli_etiket', extension='.drawio', size=3467)
-2023-12-08 16:29:06,458 - INFO - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - _server_incomming_files: Completed! Received data size = 3467.
-2023-12-08 16:29:15,387 - WARNING - bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6 - _server_incomming_files: Connection with file socket closed abruptly! 0 bytes read on a total of undefined expected bytes
-2023-12-08 16:29:18,043 - INFO - thread_main: 8
-2023-12-08 16:29:18,043 - INFO - hm_close: bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6
-2023-12-08 16:29:19,059 - INFO - thread_main: 8
-2023-12-08 16:29:19,059 - INFO - hm_close: bc2dbf7f-96f4-4aff-8477-2f12c2fcecc6
-2023-12-08 16:29:24,875 - INFO - thread_main: 0
-2023-12-08 16:29:24,875 - INFO - hm_exit: Active peersockets = 0
-2023-12-08 16:29:24,875 - INFO - hm_exit: Exiting PeerConn..
-2023-12-08 16:29:25,889 - INFO - UI-on_exit: Executed.
+2023-12-26 02:48:57,048 - INFO - _configure_logging: OK.
+2023-12-26 02:48:57,053 - INFO - get_ipv4_address: Wi-Fi 2 192.168.1.202.
+2023-12-26 02:48:57,053 - INFO - configuration_file: Configurations are set.
+2023-12-26 02:48:57,053 - INFO - PeerConn: Initialized.
+2023-12-26 02:48:57,065 - DEBUG - Using proactor: IocpProactor
+2023-12-26 02:48:57,281 - INFO - UI-set_user_data_ui: Set.
+2023-12-26 02:48:57,281 - INFO - UI-set_buttons: Set.
+2023-12-26 02:48:57,282 - INFO - UI-set_QListViews: Initialized
+2023-12-26 02:48:57,282 - INFO - thread_main: Running.
+2023-12-26 02:48:57,282 - INFO - UI-PeerConnGUI: Initialized.
+2023-12-26 02:49:03,426 - INFO - UI-show_connect_dialog: Executed.
+2023-12-26 02:49:05,750 - INFO - create_peer_socket: f54501d5-6768-46a2-904e-b1dfdbc73d93
+2023-12-26 02:49:05,750 - INFO - set_peersocket: f54501d5-6768-46a2-904e-b1dfdbc73d93
+2023-12-26 02:49:05,750 - INFO - thread_main: 2
+2023-12-26 02:49:05,750 - INFO - f54501d5-6768-46a2-904e-b1dfdbc73d93 - hm_connect: 192.168.1.202: 49152, 49153
+2023-12-26 02:49:05,750 - INFO - create_key: OK.
+2023-12-26 02:49:05,751 - INFO - f54501d5-6768-46a2-904e-b1dfdbc73d93 - hm_connect: Message server = OK.
+2023-12-26 02:49:05,751 - INFO - f54501d5-6768-46a2-904e-b1dfdbc73d93 - hm_connect: File server = OK.
+2023-12-26 02:49:05,752 - INFO - exchange_key_msg: OK.
+2023-12-26 02:49:12,955 - INFO - f54501d5-6768-46a2-904e-b1dfdbc73d93 - _server_incomming_files: Receiving a file: FileData(name='byteopus_wtext', extension='.png', size=3885)
+2023-12-26 02:49:12,956 - INFO - f54501d5-6768-46a2-904e-b1dfdbc73d93 - _server_incomming_files: Completed! Received data size = 3885.
+2023-12-26 02:49:14,418 - WARNING - f54501d5-6768-46a2-904e-b1dfdbc73d93 - _server_incomming_files: Connection with file socket closed abruptly! 0 bytes read on a total of undefined expected bytes
+2023-12-26 02:49:15,443 - INFO - thread_main: 0
+2023-12-26 02:49:15,443 - INFO - hm_close: f54501d5-6768-46a2-904e-b1dfdbc73d93
+2023-12-26 02:49:15,443 - INFO - hm_exit: Active peersockets = 0
+2023-12-26 02:49:15,443 - INFO - hm_exit: Exiting PeerConn..
+2023-12-26 02:49:16,457 - INFO - UI-on_exit: Executed.

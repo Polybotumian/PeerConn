@@ -6,12 +6,12 @@ from asyncio import (start_server, open_connection, create_task, get_running_loo
                      CancelledError, IncompleteReadError, Event, Queue)
 from socket import (gethostname, AF_INET)
 from typing import (List, AnyStr)
-from pickle import (dumps as pickle_dumps, loads as picke_loads)
+from pickle import (dumps as pickle_dumps, loads as pickle_loads)
 from logging import (basicConfig, DEBUG as LOGGING_DEBUG, getLogger, Logger)
 from psutil import (net_if_addrs)
 from os import (path, makedirs)
 from ipaddress import (ip_address)
-from json import (dumps as json_dumps, dump as json_dump, loads as json_loads)
+from json import (dump as json_dump, loads as json_loads)
 from cryptography.fernet import (Fernet)
 
 from peerconn_commands import Commands
@@ -151,27 +151,27 @@ class PeerConn(Commands):
         self._logger.info(f'{self.create_key.__name__}: OK.')
         return Fernet.generate_key()
     
-    async def exchange_key(self, peersocket_ref:PeerSocket) -> bool:
+    async def exchange_key_msg(self, peersocket_ref:PeerSocket) -> bool:
         try:
             dumped_packet = pickle_dumps(PeerPacket(self._peerdata, peersocket_ref.key, peersocket_ref.streams.msg_writer.get_extra_info('peername')))
             received_packet = None
             if peersocket_ref.servers != None:
                 received_packet = await wait_for(peersocket_ref.streams.msg_reader.read(2048), 5)
-                received_packet: PeerPacket = picke_loads(received_packet)
+                received_packet: PeerPacket = pickle_loads(received_packet)
                 peersocket_ref.key += received_packet.key
                 peersocket_ref.streams.msg_writer.write(dumped_packet)
             else:
                 peersocket_ref.streams.msg_writer.write(dumped_packet)
                 received_packet = await wait_for(peersocket_ref.streams.msg_reader.read(2048), 5)
-                received_packet: PeerPacket = picke_loads(received_packet)
+                received_packet: PeerPacket = pickle_loads(received_packet)
                 peersocket_ref.key = received_packet.key + peersocket_ref.key
-            peersocket_ref.chiper_suite = Fernet(peersocket_ref.key)
-            self._logger.info(f'{self.exchange_key.__name__}: OK.')
+            peersocket_ref.cipher_suite = Fernet(peersocket_ref.key)
+            self._logger.info(f'{self.exchange_key_msg.__name__}: OK.')
             return True
         except TimeoutError:
-            self._logger.info(f'{self.exchange_key.__name__}: Timeout!')
+            self._logger.info(f'{self.exchange_key_msg.__name__}: Timeout!')
         except Exception as e:
-            self._logger.info(f'{self.exchange_key.__name__}: {e}')
+            self._logger.info(f'{self.exchange_key_msg.__name__}: {e}')
         finally:
             await peersocket_ref.streams.msg_writer.drain()
         return False
@@ -214,7 +214,7 @@ class PeerConn(Commands):
                 peersocket.history.messages = []
             peersocket.streams.msg_reader = reader
             peersocket.streams.msg_writer = writer
-            if await self.exchange_key(peersocket):
+            if await self.exchange_key_msg(peersocket):
                 peersocket.msg_comm_connected = True
 
                 peersocket.history.messages.append(
@@ -231,8 +231,8 @@ class PeerConn(Commands):
                     try:
                         data = await peersocket.streams.msg_reader.read(2048)
                         if data:
-                            decrypted_data = peersocket.chiper_suite.decrypt(data)
-                            data : PeerPacket = picke_loads(decrypted_data)
+                            decrypted_data = peersocket.cipher_suite.decrypt(data)
+                            data : PeerPacket = pickle_loads(decrypted_data)
                             peersocket.history.messages.append(
                                 Message(
                                     sender= data.sender.name,
@@ -321,7 +321,7 @@ class PeerConn(Commands):
                 try:
                     serialized_data = await peersocket.streams.file_reader.readuntil(PeerConn._file_delimiter)
                     peersocket.in_file_transaction = True
-                    file_data:FileData = picke_loads(serialized_data.removesuffix(PeerConn._file_delimiter))
+                    file_data:FileData = pickle_loads(serialized_data.removesuffix(PeerConn._file_delimiter))
                     logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Receiving a file: {file_data}')
                     todays_download_path = path.join(PeerConn._DOWNLOADS_DIR, str(datetime.now().date()))
                     if not path.exists(todays_download_path):
@@ -340,7 +340,7 @@ class PeerConn(Commands):
                         readed_data_size = 0
                         while True:
                             try:
-                                data = await wait_for(peersocket.streams.file_reader.read(4096), timeout= 3.0)
+                                data = await wait_for(peersocket.streams.file_reader.read(4096), timeout=5.0)
                                 received_file.write(data)
                                 readed_data_size += len(data)
                                 peersocket.file_percentage = round((readed_data_size * 100) / file_data.size)
@@ -478,7 +478,7 @@ class PeerConn(Commands):
                     if peersocket_ref.streams.msg_writer != None:
                         packet = PeerPacket(sender= self._peerdata, target= peersocket_ref.streams.msg_writer.get_extra_info('peername'), message= Message(self._peerdata.name, data, datetime.now(), MessageTypes.ME))
                         packet_dump = pickle_dumps(packet)
-                        encrypted_dump = peersocket_ref.chiper_suite.encrypt(packet_dump)
+                        encrypted_dump = peersocket_ref.cipher_suite.encrypt(packet_dump)
                         peersocket_ref.streams.msg_writer.write(encrypted_dump)
                         peersocket_ref.history.messages.append(packet.message)
                         await peersocket_ref.streams.msg_writer.drain()

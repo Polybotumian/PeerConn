@@ -86,4 +86,4 @@ class PeerSocket:
     in_file_transaction:    bool = False
     file_percentage:            int | None = 0
     key:                        str | None = None
-    chiper_suite:            Fernet | None = None
+    cipher_suite:           Fernet | None = None
