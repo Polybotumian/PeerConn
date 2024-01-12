@@ -151,27 +151,27 @@ class PeerConn(Commands):
         self._logger.info(f'{self.create_key.__name__}: OK.')
         return Fernet.generate_key()
     
-    async def exchange_key_msg(self, peersocket_ref:PeerSocket) -> bool:
+    async def exchange_key(self, peersocket_ref:PeerSocket) -> bool:
         try:
             dumped_packet = pickle_dumps(PeerPacket(self._peerdata, peersocket_ref.key, peersocket_ref.streams.msg_writer.get_extra_info('peername')))
             received_packet = None
             if peersocket_ref.servers != None:
-                received_packet = await wait_for(peersocket_ref.streams.msg_reader.read(2048), 5)
+                received_packet = await wait_for(peersocket_ref.streams.msg_reader.read(1024 * 2), 5)
                 received_packet: PeerPacket = pickle_loads(received_packet)
-                peersocket_ref.key += received_packet.key
+                peersocket_ref.key = received_packet.key + peersocket_ref.key
                 peersocket_ref.streams.msg_writer.write(dumped_packet)
             else:
                 peersocket_ref.streams.msg_writer.write(dumped_packet)
-                received_packet = await wait_for(peersocket_ref.streams.msg_reader.read(2048), 5)
+                received_packet = await wait_for(peersocket_ref.streams.msg_reader.read(1024 * 2), 5)
                 received_packet: PeerPacket = pickle_loads(received_packet)
-                peersocket_ref.key = received_packet.key + peersocket_ref.key
+                peersocket_ref.key = peersocket_ref.key + received_packet.key
             peersocket_ref.cipher_suite = Fernet(peersocket_ref.key)
-            self._logger.info(f'{self.exchange_key_msg.__name__}: OK.')
+            self._logger.info(f'{self.exchange_key.__name__}: OK.')
             return True
         except TimeoutError:
-            self._logger.info(f'{self.exchange_key_msg.__name__}: Timeout!')
+            self._logger.error(f'{self.exchange_key.__name__}: Timeout!')
         except Exception as e:
-            self._logger.info(f'{self.exchange_key_msg.__name__}: {e}')
+            self._logger.error(f'{self.exchange_key.__name__}: {e}')
         finally:
             await peersocket_ref.streams.msg_writer.drain()
         return False
@@ -205,19 +205,19 @@ class PeerConn(Commands):
             except Exception as ex:
                 self._logger.error(f'{self.hm_set_server.__name__}: {id}: {ex}')
 
-    async def _server_incomming_messages(self, reader: StreamReader, writer: StreamWriter, peersocket:PeerSocket, logger: Logger) -> None:
+    async def _server_incomming_messages(self, reader: StreamReader, writer: StreamWriter, peersocket_ref:PeerSocket, logger: Logger) -> None:
         try:
-            if peersocket.streams == None:
-                peersocket.streams = Streams()
+            if peersocket_ref.streams == None:
+                peersocket_ref.streams = Streams()
             # peersocket.events.msg_event_server = Event()
-            if peersocket.history.messages == None:
-                peersocket.history.messages = []
-            peersocket.streams.msg_reader = reader
-            peersocket.streams.msg_writer = writer
-            if await self.exchange_key_msg(peersocket):
-                peersocket.msg_comm_connected = True
+            if peersocket_ref.history.messages == None:
+                peersocket_ref.history.messages = []
+            peersocket_ref.streams.msg_reader = reader
+            peersocket_ref.streams.msg_writer = writer
+            if await self.exchange_key(peersocket_ref):
+                peersocket_ref.msg_comm_connected = True
 
-                peersocket.history.messages.append(
+                peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
                                 content= 'Connected to message socket!',
@@ -225,15 +225,15 @@ class PeerConn(Commands):
                                 type= MessageTypes.CONNECTION_ESTABLISHED
                             )
                         )
-                peersocket.history.new_messages += 1
+                peersocket_ref.history.new_messages += 1
 
-                while not peersocket.events.msg_event_server.is_set():
+                while not peersocket_ref.events.msg_event_server.is_set():
                     try:
-                        data = await peersocket.streams.msg_reader.read(2048)
+                        data = await peersocket_ref.streams.msg_reader.read(1024 * 2)
                         if data:
-                            decrypted_data = peersocket.cipher_suite.decrypt(data)
+                            decrypted_data = peersocket_ref.cipher_suite.decrypt(data)
                             data : PeerPacket = pickle_loads(decrypted_data)
-                            peersocket.history.messages.append(
+                            peersocket_ref.history.messages.append(
                                 Message(
                                     sender= data.sender.name,
                                     content= data.message.content,
@@ -241,19 +241,19 @@ class PeerConn(Commands):
                                     type= MessageTypes.PEER
                                 )
                             )
-                            peersocket.history.new_messages += 1
+                            peersocket_ref.history.new_messages += 1
                         else:
                             break
                     except IncompleteReadError as ex:
-                        if peersocket.msg_comm_connected:
-                            logger.warning(f'{peersocket.id} - {PeerConn._server_incomming_messages.__name__}: Connection with message socket closed abruptly! {ex}')
+                        if peersocket_ref.msg_comm_connected:
+                            logger.warning(f'{peersocket_ref.id} - {PeerConn._server_incomming_messages.__name__}: Connection with message socket closed abruptly! {ex}')
                         else:
-                            logger.info(f'{peersocket.id} - {PeerConn._server_incomming_messages.__name__}: Disconnected from message socket.')
+                            logger.info(f'{peersocket_ref.id} - {PeerConn._server_incomming_messages.__name__}: Disconnected from message socket.')
                         break
                     except OSError as ex:
-                        logger.error(f'{peersocket.id} - {PeerConn._server_incomming_messages.__name__}: {ex}')
+                        logger.error(f'{peersocket_ref.id} - {PeerConn._server_incomming_messages.__name__}: {ex}')
                         if ex.errno == 64:
-                            peersocket.history.messages.append(
+                            peersocket_ref.history.messages.append(
                                 Message(
                                     sender= PeerConn.__name__,
                                     content= 'Connection lost with message port! The specified network name is no longer available.',
@@ -263,15 +263,15 @@ class PeerConn(Commands):
                             )
                         break
                     except Exception as ex:
-                        logger.error(f'{peersocket.id} - {PeerConn._server_incomming_messages.__name__}: {ex}')
+                        logger.error(f'{peersocket_ref.id} - {PeerConn._server_incomming_messages.__name__}: {ex}')
                         break
         finally:
             notify: str = None
-            if peersocket.msg_comm_connected:
+            if peersocket_ref.msg_comm_connected:
                 notify = 'Connection with message socket closed abruptly!'
             else:
                 notify = 'Disconnected from message socket.'
-            peersocket.history.messages.append(
+            peersocket_ref.history.messages.append(
                         Message(
                             sender= PeerConn.__name__,
                             content= notify,
@@ -279,35 +279,35 @@ class PeerConn(Commands):
                             type= MessageTypes.CONNECTION_LOST
                         )
                     )
-            peersocket.history.new_messages += 1
-            if peersocket != None:
-                peersocket.msg_comm_connected = False
-                if peersocket.servers != None:
-                    if peersocket.servers.msg_server != None:
-                        peersocket.servers.msg_server.close()
-                        await peersocket.servers.msg_server.wait_closed()
-                        peersocket.servers.msg_server = None
+            peersocket_ref.history.new_messages += 1
+            if peersocket_ref != None:
+                peersocket_ref.msg_comm_connected = False
+                if peersocket_ref.servers != None:
+                    if peersocket_ref.servers.msg_server != None:
+                        peersocket_ref.servers.msg_server.close()
+                        await peersocket_ref.servers.msg_server.wait_closed()
+                        peersocket_ref.servers.msg_server = None
 
-                if peersocket.streams != None:
-                    if peersocket.streams.msg_writer != None:
-                        peersocket.streams.msg_writer.close()
-                        await peersocket.streams.msg_writer.wait_closed()
-                        peersocket.streams.msg_writer = None
-                        peersocket.streams.msg_reader = None
+                if peersocket_ref.streams != None:
+                    if peersocket_ref.streams.msg_writer != None:
+                        peersocket_ref.streams.msg_writer.close()
+                        await peersocket_ref.streams.msg_writer.wait_closed()
+                        peersocket_ref.streams.msg_writer = None
+                        peersocket_ref.streams.msg_reader = None
 
-    async def _server_incomming_files(self, reader: StreamReader, writer: StreamWriter, peersocket: PeerSocket, logger: Logger) -> None:
+    async def _server_incomming_files(self, reader: StreamReader, writer: StreamWriter, peersocket_ref: PeerSocket, logger: Logger) -> None:
         try:
-            if peersocket.streams == None:
-                peersocket.streams = Streams()
+            if peersocket_ref.streams == None:
+                peersocket_ref.streams = Streams()
             # peersocket.events.file_event_stream = Event()
-            if peersocket.history.messages == None:
-                peersocket.history.messages = []
-            peersocket.streams.file_reader = reader
-            peersocket.streams.file_writer = writer
-            peersocket.file_comm_connected = True
-            peersocket.file_percentage = 0
+            if peersocket_ref.history.messages == None:
+                peersocket_ref.history.messages = []
+            peersocket_ref.streams.file_reader = reader
+            peersocket_ref.streams.file_writer = writer
+            peersocket_ref.file_comm_connected = True
+            peersocket_ref.file_percentage = 0
 
-            peersocket.history.messages.append(
+            peersocket_ref.history.messages.append(
                         Message(
                             sender= PeerConn.__name__,
                             content= 'Connected to file socket!',
@@ -315,38 +315,40 @@ class PeerConn(Commands):
                             type= MessageTypes.CONNECTION_ESTABLISHED
                         )
                     )
-            peersocket.history.new_messages += 1
+            peersocket_ref.history.new_messages += 1
 
-            while not peersocket.events.file_event_server.is_set():
+            while not peersocket_ref.events.file_event_server.is_set():
                 try:
-                    serialized_data = await peersocket.streams.file_reader.readuntil(PeerConn._file_delimiter)
-                    peersocket.in_file_transaction = True
+                    serialized_data = await peersocket_ref.streams.file_reader.readuntil(PeerConn._file_delimiter)
+                    peersocket_ref.in_file_transaction = True
                     file_data:FileData = pickle_loads(serialized_data.removesuffix(PeerConn._file_delimiter))
-                    logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Receiving a file: {file_data}')
+                    logger.info(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: Receiving a file: {file_data}')
                     todays_download_path = path.join(PeerConn._DOWNLOADS_DIR, str(datetime.now().date()))
                     if not path.exists(todays_download_path):
                         makedirs(todays_download_path)
                     received_file_path = path.join(todays_download_path, f'{file_data.name}{file_data.extension}')
                     with open(received_file_path, 'wb') as received_file:
-                        peersocket.history.messages.append(
+                        peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
-                                content= f'{peersocket.peerdata.name} is sending you [{file_data.name}{file_data.extension}, {file_data.size}].',
+                                content= f'{peersocket_ref.peerdata.name} is sending you [{file_data.name}{file_data.extension}, {file_data.size}].',
                                 date_time= datetime.now(),
                                 type= MessageTypes.FILE_NOTIFY_0
                             )
                         )
-                        peersocket.history.new_messages += 1
+                        peersocket_ref.history.new_messages += 1
                         readed_data_size = 0
+                        
                         while True:
                             try:
-                                data = await wait_for(peersocket.streams.file_reader.read(4096), timeout=5.0)
-                                received_file.write(data)
-                                readed_data_size += len(data)
-                                peersocket.file_percentage = round((readed_data_size * 100) / file_data.size)
+                                chunk = await wait_for(peersocket_ref.streams.file_reader.read(1024 * 4), timeout=10.0)
+                                decrypted_chunk = peersocket_ref.cipher_suite.decrypt(chunk)
+                                received_file.write(decrypted_chunk)
+                                readed_data_size += len(decrypted_chunk)
+                                peersocket_ref.file_percentage = round((readed_data_size * 100) / file_data.size)
                                 if readed_data_size >= file_data.size:
-                                    logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
-                                    peersocket.history.messages.append(
+                                    logger.info(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: Completed! Received data size = {readed_data_size}.')
+                                    peersocket_ref.history.messages.append(
                                         Message(
                                             sender= PeerConn.__name__,
                                             content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is completely received!.',
@@ -354,11 +356,11 @@ class PeerConn(Commands):
                                             type= MessageTypes.FILE_NOTIFY_1
                                         )
                                     )
-                                    peersocket.history.new_messages += 1
+                                    peersocket_ref.history.new_messages += 1
                                     break
-                                elif not data:
-                                    logger.warning(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Failed to receive!')
-                                    peersocket.history.messages.append(
+                                elif not decrypted_chunk:
+                                    logger.warning(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: Failed to receive!')
+                                    peersocket_ref.history.messages.append(
                                         Message(
                                             sender= PeerConn.__name__,
                                             content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is failed to receive!.',
@@ -366,10 +368,10 @@ class PeerConn(Commands):
                                             type= MessageTypes.FILE_NOTIFY_1
                                         )
                                     )
-                                    peersocket.history.new_messages += 1
+                                    peersocket_ref.history.new_messages += 1
                                     break
                             except TimeoutError:
-                                peersocket.history.messages.append(
+                                peersocket_ref.history.messages.append(
                                         Message(
                                             sender= PeerConn.__name__,
                                             content= f'[{file_data.name}{file_data.extension}, {readed_data_size}] is failed to receive!.',
@@ -377,18 +379,18 @@ class PeerConn(Commands):
                                             type= MessageTypes.FILE_NOTIFY_1
                                         )
                                     )
-                                peersocket.history.new_messages += 1
+                                peersocket_ref.history.new_messages += 1
                                 break
                 except IncompleteReadError as ex:
-                    if peersocket.file_comm_connected:
-                        logger.warning(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Connection with file socket closed abruptly! {ex}')
+                    if peersocket_ref.file_comm_connected:
+                        logger.warning(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: Connection with file socket closed abruptly! {ex}')
                     else:
-                        logger.info(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: Disconnected from file socket.')
+                        logger.info(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: Disconnected from file socket.')
                     break
                 except OSError as ex:
-                    logger.error(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: {ex}')
+                    logger.error(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: {ex}')
                     if ex.errno == 64:
-                        peersocket.history.messages.append(
+                        peersocket_ref.history.messages.append(
                             Message(
                                 sender= PeerConn.__name__,
                                 content= 'Connection lost with file port! The specified network name is no longer available.',
@@ -398,17 +400,17 @@ class PeerConn(Commands):
                         )
                     break
                 except Exception as ex:
-                    logger.error(f'{peersocket.id} - {PeerConn._server_incomming_files.__name__}: {ex}')
+                    logger.error(f'{peersocket_ref.id} - {PeerConn._server_incomming_files.__name__}: {ex}')
                     break
                 finally:
-                    peersocket.in_file_transaction = False
+                    peersocket_ref.in_file_transaction = False
         finally:
             notify: str = None
-            if peersocket.file_comm_connected:
+            if peersocket_ref.file_comm_connected:
                 notify = 'Connection with file socket closed abruptly!'
             else:
                 notify = 'Disconnected from file socket.'
-            peersocket.history.messages.append(
+            peersocket_ref.history.messages.append(
                         Message(
                             sender= PeerConn.__name__,
                             content= notify,
@@ -416,21 +418,21 @@ class PeerConn(Commands):
                             type= MessageTypes.CONNECTION_LOST
                         )
                     )
-            peersocket.history.new_messages += 1
-            if peersocket != None:
-                peersocket.file_comm_connected = False
-                if peersocket.servers != None:
-                    if peersocket.servers.file_server != None:
-                        peersocket.servers.file_server.close()
-                        await peersocket.servers.file_server.wait_closed()
-                        peersocket.servers.file_server = None
+            peersocket_ref.history.new_messages += 1
+            if peersocket_ref != None:
+                peersocket_ref.file_comm_connected = False
+                if peersocket_ref.servers != None:
+                    if peersocket_ref.servers.file_server != None:
+                        peersocket_ref.servers.file_server.close()
+                        await peersocket_ref.servers.file_server.wait_closed()
+                        peersocket_ref.servers.file_server = None
 
-                if peersocket.streams != None:
-                    if peersocket.streams.file_writer != None:
-                        peersocket.streams.file_writer.close()
-                        await peersocket.streams.file_writer.wait_closed()
-                        peersocket.streams.file_writer = None
-                        peersocket.streams.file_reader = None
+                if peersocket_ref.streams != None:
+                    if peersocket_ref.streams.file_writer != None:
+                        peersocket_ref.streams.file_writer.close()
+                        await peersocket_ref.streams.file_writer.wait_closed()
+                        peersocket_ref.streams.file_writer = None
+                        peersocket_ref.streams.file_reader = None
 
     async def hm_connect(self, id: str) -> None:
         peersocket_ref = self.get_socket(id)
@@ -531,12 +533,13 @@ class PeerConn(Commands):
                     with open(file_path, 'rb') as file:
                         total_write = 0
                         while not peersocket_ref.events.file_event_stream.is_set():
-                            chunk = file.read(4096)
+                            chunk = file.read(1024 * 2)
                             if not chunk:
                                 peersocket_ref.file_percentage = 0
                                 peersocket_ref.in_file_transaction = False
                                 break
-                            peersocket_ref.streams.file_writer.write(chunk)
+                            encrypted_chunk = peersocket_ref.cipher_suite.encrypt(chunk)
+                            peersocket_ref.streams.file_writer.write(encrypted_chunk)
                             await peersocket_ref.streams.file_writer.drain()
                             total_write += len(chunk)
                             peersocket_ref.file_percentage = round((total_write * 100) / file_data.size)
