@@ -9,10 +9,11 @@ from os import (path)
 from functools import (partial)
 from gui_dialogs import (DialogChangeConfigs, DialogEditConnectionItem, DialogConnect, DialogListen)
 from gui_threads import (PeerConnThread)
+from os import (path, makedirs)
 
 class PeerConnGUI:
     # Main Window Constants
-    MAIN_WINDOW_TITLE: str = 'PeerConn - GUI (v231217)'
+    MAIN_WINDOW_TITLE: str = 'PeerConn - GUI (v240114)'
     # Properties
     _peerconn:                        PeerConn | None = None
     _peerconn_thread:           PeerConnThread | None = None
@@ -279,25 +280,39 @@ class PeerConnGUI:
         index = self._ui.listView_sockets.indexAt(position)
         if index.isValid():
             menu = QMenu(self._ui.listView_sockets)
+            save_chat_action = QAction('Save Chat', menu)
             edit_action = QAction('Edit', menu)
             disconnect_action = QAction('Disconnect', menu)
             remove_action = QAction('Remove', menu)
+            menu.addAction(save_chat_action)
             menu.addAction(edit_action)
             menu.addAction(disconnect_action)
             menu.addAction(remove_action)
             action = menu.exec_(self._ui.listView_sockets.viewport().mapToGlobal(position))
             item = self._model_socket_list.itemFromIndex(index)
             item_id = item.data(Qt.ItemDataRole.UserRole + 1)
+            peersocket_ref = self._peerconn.get_socket(item_id)
             if action == edit_action:
                 self.show_edit_connection_item_dialog()
             elif action == disconnect_action:
                 self._peerconn.close(item_id)
+                self._peerconn._logger.info(f'UI-{self.context_menu_active_connections.__name__}: {peersocket_ref.id} - Connection closed!')
             elif action == remove_action:
                 i = item.row()
                 self._peerconn.close(item_id)
                 sleep(0.1) # Wait for disconnecting from peersocket
                 self._peerconn._peersockets.remove(self._peerconn._peersockets[i])
                 self._model_socket_list.removeRow(i)
+                self._peerconn._logger.info(f'UI-{self.context_menu_active_connections.__name__}: {peersocket_ref.id} - Connection removed!')
+            elif action == save_chat_action:
+                saved_chat_path = path.abspath(path.dirname(sys_argv[0]))
+                saved_chat_path = path.join(saved_chat_path, 'saved_chats')
+                if not path.exists(saved_chat_path):
+                    makedirs(saved_chat_path)
+                with open(path.join(saved_chat_path, f'{peersocket_ref.peerdata.name}_{peersocket_ref.id}.txt'), 'w', encoding= 'utf-8') as chat_text:
+                    for message in peersocket_ref.history.messages:
+                        chat_text.write(f'{message.date_time}, {message.type}, {message.sender} : {message.content}\n')
+                    self._peerconn._logger.info(f'UI-{self.context_menu_active_connections.__name__}: {peersocket_ref.id} - Chat saved!')
 
     def update_ui(self) -> None:
         try:

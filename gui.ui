@@ -167,10 +167,31 @@
               <property name="frameShape">
                <enum>QFrame::StyledPanel</enum>
               </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOff</enum>
+              </property>
+              <property name="sizeAdjustPolicy">
+               <enum>QAbstractScrollArea::AdjustIgnored</enum>
+              </property>
               <property name="editTriggers">
                <set>QAbstractItemView::EditKeyPressed</set>
               </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="textElideMode">
+               <enum>Qt::ElideNone</enum>
+              </property>
               <property name="isWrapping" stdset="0">
+               <bool>false</bool>
+              </property>
+              <property name="resizeMode">
+               <enum>QListView::Adjust</enum>
+              </property>
+              <property name="layoutMode">
+               <enum>QListView::SinglePass</enum>
+              </property>
+              <property name="uniformItemSizes">
                <bool>false</bool>
               </property>
               <property name="wordWrap">
@@ -363,8 +384,6 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>Options</string>
     </property>
-    <addaction name="actionPreferences"/>
-    <addaction name="separator"/>
     <addaction name="actionChange_My_Data"/>
    </widget>
    <addaction name="menuOptions"/>
