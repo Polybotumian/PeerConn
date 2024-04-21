@@ -1,0 +1,14 @@
+{
+    "defLang": "tr",
+    "logger": {
+        "filename": "last.log",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "mode": "w"
+    },
+    "factory": {
+        "port": 45152
+    },
+    "downloads": {
+        "dir": "./downloads"
+    }
+}

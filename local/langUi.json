@@ -1,0 +1,22 @@
+{
+    "en": {
+        "send": "send",
+        "options": "options",
+        "message": "message",
+        "file": "file",
+        "pick": "pick",
+        "connect_to": "connect to",
+        "disconnect": "disconnect",
+        "remove": "remove"
+    },
+    "tr": {
+        "send": "gönder",
+        "options": "ayarlar",
+        "message": "mesaj",
+        "file": "dosya",
+        "pick": "seç",
+        "connect_to": "bağlan",
+        "disconnect": "bağlantıyı kes",
+        "remove": "sil"
+    }
+}
