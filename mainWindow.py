@@ -59,13 +59,19 @@ class MainWindow(QMainWindow):
     def showConnListContextMenu(self, position):
         context_menu = QMenu(self)
         disconnect_action = context_menu.addAction(self.langUi['disconnect'].title())
-        # if 
         remove_action = context_menu.addAction(self.langUi['remove'].title())
+        row = self.ui.connectionList.currentRow()
+        basicPeerInfo: BPI = self.ui.connectionList.item(row).data(Qt.ItemDataRole.UserRole + 1)
+        if basicPeerInfo.flags & 1 == 0:
+            disconnect_action.setEnabled(False)
+            remove_action.setEnabled(True)
+        else:
+            disconnect_action.setEnabled(True)
+            remove_action.setEnabled(False)
         peer_item:BPI = self.ui.connectionList.currentItem()
         
         if peer_item:
             peer: BPI = peer_item.data(Qt.ItemDataRole.UserRole + 1)
-            row = self.ui.connectionList.currentRow()
             action = context_menu.exec_(self.ui.connectionList.mapToGlobal(position))
 
             if action == disconnect_action:
@@ -115,16 +121,10 @@ class MainWindow(QMainWindow):
             self.setUiElemsActiveness(True)
             self.ui.chatWindow.addItems(peer_item.data(Qt.ItemDataRole.UserRole + 1).history.messages)
     
-    def updateConnList(self, peerInfo):
-        newPeer = BPI(
-            identifier= peerInfo.identifier,
-            history= CHD(),
-            flags= peerInfo.flags
-        )
-
+    def updateConnList(self, basicPeerInfo):
         connection = QListWidgetItem()
-        connection.setText(newPeer.identifier)
-        connection.setData(Qt.ItemDataRole.UserRole + 1, newPeer)
+        connection.setText(basicPeerInfo.identifier)
+        connection.setData(Qt.ItemDataRole.UserRole + 1, basicPeerInfo)
         self.ui.connectionList.addItem(connection)
 
     def openFileDiag(self):

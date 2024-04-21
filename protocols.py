@@ -1,7 +1,7 @@
 from twisted.internet import protocol
 from twisted.internet.interfaces import ITransport
 from customSignals import Communication, PeerInfo
-from dtos import PDTO
+from dmodels import BPI, CHD
 from uuid import uuid4
 from logging import Logger
 from os import urandom
@@ -26,7 +26,6 @@ class P2PProtocol(protocol.Protocol):
 
     def connectionMade(self):
         self.logger.info(f'Connection established: {self.identifier}')
-        self.active = True
         self.authenticatePeer()
 
     def connectionLost(self, reason):
@@ -36,7 +35,7 @@ class P2PProtocol(protocol.Protocol):
             reason_msg = "Connection lost unexpectedly."
         else:
             reason_msg = reason.getErrorMessage()  # Default message
-        self.active = False
+        self.basicPeerInfo.flags = 0
         self.communication.lost.emit(self.identifier, reason_msg)
         self.logger.info(f'Connection lost: {self.identifier}, {reason_msg}')
 
@@ -83,10 +82,12 @@ class P2PProtocol(protocol.Protocol):
         print(f"Dosya alındı: {len(file_data)} bytes")
 
     def authenticatePeer(self):
-        basicPeerInfo = PDTO()
-        basicPeerInfo.identifier = self.identifier
-        basicPeerInfo.flags = 1
-        self.peerInfo.descriptive.emit(basicPeerInfo)
+        self.basicPeerInfo = BPI(
+            identifier= self.identifier,
+            history= CHD(),
+            flags= 1
+        )
+        self.peerInfo.descriptive.emit(self.basicPeerInfo)
         self.logger.info(f'Authenticating: {self.identifier}')
 
     def handleError(self, error):

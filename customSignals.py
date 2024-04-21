@@ -1,5 +1,5 @@
 from PyQt5.QtCore import pyqtSignal, QObject
-from dtos import PDTO
+from dmodels import BPI
 
 class Communication(QObject):
     received = pyqtSignal(str, str)
@@ -9,4 +9,4 @@ class Communication(QObject):
     lost = pyqtSignal(str, str)
 
 class PeerInfo(QObject):
-    descriptive = pyqtSignal(PDTO)
+    descriptive = pyqtSignal(BPI)
