@@ -1,0 +1,60 @@
+## Current Status of the Project
+- Authentication
+    - Peer []
+- Data Transfer
+    - Better flags for message, file & Unidentified []
+    - Message
+        - Get [X]
+        - Send [X]
+    - File
+        - Get []
+        - Send [X]
+        - In-Mem Zip []
+        - Cancel []
+- Notification
+    - Connection Made
+        - Message [X]
+        - Sound [X]
+        - Icon [X]
+    - Connection Lost
+        - Message [X]
+        - Sound [X]
+        - Icon [X]
+    - Message
+        - Sound [X]
+        - Icon []
+        - Unread []
+    - File
+        - Message []
+        - Sound []
+    - Peer Authentication
+        - Message []
+        - Sound []
+- Configuration
+    - Automatically Generate in Absence []
+    - Language [X]
+    - Port [X]
+    - Downloaded Files Directory [X]
+    - Logger Configurations [X]
+    - Change via UI Option []
+- Localization
+    - Language [X]
+- Encryption
+    - Message []
+    - File []
+- Decryption
+    - Message []
+    - File []
+- Confirmation
+    - Incomming Connection []
+    - Incomming File []
+- Assets
+    - Icons [X]
+    - Sounds [X]
+- Test
+    - Manual
+        - Telnet in local network []
+        - Two instance in local network []
+        - Two instance in two different networks []
+## To-Do
+- Deactivate connection related operations when disconnected like; Message and file

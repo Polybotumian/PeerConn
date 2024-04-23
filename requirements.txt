@@ -12,7 +12,7 @@ incremental==22.10.0
 packaging==24.0
 pefile==2023.2.7
 pycparser==2.22
-pyinstaller==6.5.0
+pyinstaller==5.13.1
 pyinstaller-hooks-contrib==2024.3
 PyQt5==5.15.9
 pyqt5-plugins==5.15.9.2.3

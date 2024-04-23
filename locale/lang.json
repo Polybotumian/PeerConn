@@ -7,7 +7,8 @@
         "pick": "pick",
         "connect_to": "connect to",
         "disconnect": "disconnect",
-        "remove": "remove"
+        "remove": "remove",
+        "upload": "upload"
     },
     "tr": {
         "send": "gönder",
@@ -17,6 +18,7 @@
         "pick": "seç",
         "connect_to": "bağlan",
         "disconnect": "bağlantıyı kes",
-        "remove": "sil"
+        "remove": "sil",
+        "upload": "yükle"
     }
 }
