@@ -4,3 +4,5 @@ build/
 *.log
 downloads/
 __pycache__/
+__pycache__/*.pyc
+*.pyc
