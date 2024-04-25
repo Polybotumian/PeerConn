@@ -21,7 +21,7 @@
         - Sound [X]
         - Icon [X]
     - Message
-        - Sound [X]
+        - Sound []
         - Icon []
         - Unread []
     - File
