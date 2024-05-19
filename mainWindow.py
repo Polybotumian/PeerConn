@@ -11,6 +11,13 @@ from json import load
 from PyQt5.QtMultimedia import QSoundEffect
 from factories import P2PFactory
 from typing import Any
+from OpenSSL.crypto import X509, PKey
+from twisted.internet.ssl import (
+    Certificate,
+    CertificateOptions,
+    trustRootFromCertificates,
+)
+
 
 class MainWindow(QMainWindow):
     twistedFactory: P2PFactory
@@ -24,19 +31,25 @@ class MainWindow(QMainWindow):
         self.config = config
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        
-        self.setWindowTitle('PeerConn')
+
+        self.setWindowTitle("PeerConn")
         self.setUilanguage()
         self.loadIcons()
         self.setIcons()
         self.loadSounds()
         self.setUiElemsActiveness(False)
-        
+
         self.communication = Communication()
         self.peerInfo = PeerInfo()
         self.logger: Logger = None
-        self.ui.connectionList.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.ui.connectionList.customContextMenuRequested.connect(self.showConnListContextMenu)
+        self.ca_key: PKey = None
+        self.ca_cert: X509 = None
+        self.ui.connectionList.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.ui.connectionList.customContextMenuRequested.connect(
+            self.showConnListContextMenu
+        )
 
         self.setSignals()
 
@@ -44,18 +57,25 @@ class MainWindow(QMainWindow):
         """
         Loads defined language from JSON file & sets UI component texts.
         """
-        with open(path.join(self.config['locale']['foldername'], self.config['locale']['lang']['filename']), "r", encoding= 'utf-8') as file:
-            self.langUi = load(file)[self.config['locale']['lang']['cur']]
+        with open(
+            path.join(
+                self.config["locale"]["foldername"],
+                self.config["locale"]["lang"]["filename"],
+            ),
+            "r",
+            encoding="utf-8",
+        ) as file:
+            self.langUi = load(file)[self.config["locale"]["lang"]["cur"]]
 
-        self.ui.tabWidget.setTabText(0, self.langUi['message'].title())
-        self.ui.tabWidget.setTabText(1, self.langUi['file'].title())
+        self.ui.tabWidget.setTabText(0, self.langUi["message"].title())
+        self.ui.tabWidget.setTabText(1, self.langUi["file"].title())
 
-        self.ui.sendButton_0.setText(self.langUi['send'].title())
-        self.ui.pickButton.setText(self.langUi['pick'].title())
-        self.ui.sendButton_1.setText(self.langUi['send'].title())
+        self.ui.sendButton_0.setText(self.langUi["send"].title())
+        self.ui.pickButton.setText(self.langUi["pick"].title())
+        self.ui.sendButton_1.setText(self.langUi["send"].title())
 
-        self.ui.menuOptions.setTitle(self.langUi['options'].title())
-        self.ui.actionConnect_To.setText(self.langUi['connect_to'].title())
+        self.ui.menuOptions.setTitle(self.langUi["options"].title())
+        self.ui.actionConnect_To.setText(self.langUi["connect_to"].title())
 
     def setSignals(self) -> None:
         self.ui.sendButton_0.clicked.connect(self.emitSendMsgSignal)
@@ -72,32 +92,42 @@ class MainWindow(QMainWindow):
         self.ui.actionConnect_To.triggered.connect(self.showConnDiag)
 
     def loadIcons(self):
-        iconsPath = path.join(self.config['assets']['foldername'], self.config['assets']['icons']['foldername'])
+        iconsPath = path.join(
+            self.config["assets"]["foldername"],
+            self.config["assets"]["icons"]["foldername"],
+        )
         iconDirs = listdir(iconsPath)
         self.icons = {}
         for iconDir in iconDirs:
-            self.icons[path.splitext(path.basename(iconDir))[0]] = QIcon(path.abspath(iconsPath) + '/' + iconDir)
+            self.icons[path.splitext(path.basename(iconDir))[0]] = QIcon(
+                path.abspath(iconsPath) + "/" + iconDir
+            )
 
     def loadSounds(self):
-        soundsPath = path.join(self.config['assets']['foldername'], self.config['assets']['sounds']['foldername'])
+        soundsPath = path.join(
+            self.config["assets"]["foldername"],
+            self.config["assets"]["sounds"]["foldername"],
+        )
         soundDirs = listdir(soundsPath)
         self.sounds: dict[str, QSoundEffect] = {}
         for soundDir in soundDirs:
             key = path.splitext(path.basename(soundDir))[0]
             self.sounds[key] = QSoundEffect(self)
-            self.sounds[key].setSource(QUrl.fromLocalFile(path.join(soundsPath, soundDir)))
+            self.sounds[key].setSource(
+                QUrl.fromLocalFile(path.join(soundsPath, soundDir))
+            )
             self.sounds[key].setVolume(1.0)
 
     def setIcons(self):
-        self.ui.tabWidget.setTabIcon(0, self.icons['messages'])
-        self.ui.tabWidget.setTabIcon(1, self.icons['document'])
+        self.ui.tabWidget.setTabIcon(0, self.icons["messages"])
+        self.ui.tabWidget.setTabIcon(1, self.icons["document"])
 
-        self.ui.sendButton_0.setIcon(self.icons['paper-plane'])
-        self.ui.pickButton.setIcon(self.icons['search-alt'])
-        self.ui.sendButton_1.setIcon(self.icons['upload'])
+        self.ui.sendButton_0.setIcon(self.icons["paper-plane"])
+        self.ui.pickButton.setIcon(self.icons["search-alt"])
+        self.ui.sendButton_1.setIcon(self.icons["upload"])
 
-        self.ui.menuOptions.setIcon(self.icons['settings'])
-        self.ui.actionConnect_To.setIcon(self.icons['plus'])
+        self.ui.menuOptions.setIcon(self.icons["settings"])
+        self.ui.actionConnect_To.setIcon(self.icons["plus"])
 
     def showConnDiag(self) -> None:
         dialog = ConnectionDialog()
@@ -107,10 +137,14 @@ class MainWindow(QMainWindow):
 
     def showConnListContextMenu(self, position) -> None:
         context_menu = QMenu(self)
-        disconnect_action: QAction = context_menu.addAction(self.langUi['disconnect'].title())
-        remove_action: QAction = context_menu.addAction(self.langUi['remove'].title())
+        disconnect_action: QAction = context_menu.addAction(
+            self.langUi["disconnect"].title()
+        )
+        remove_action: QAction = context_menu.addAction(self.langUi["remove"].title())
         row = self.ui.connectionList.currentRow()
-        basicPeerInfo: BPI = self.ui.connectionList.item(row).data(Qt.ItemDataRole.UserRole + 1)
+        basicPeerInfo: BPI = self.ui.connectionList.item(row).data(
+            Qt.ItemDataRole.UserRole + 1
+        )
         if basicPeerInfo.flags & 1 == 0:
             disconnect_action.setEnabled(False)
             remove_action.setEnabled(True)
@@ -118,7 +152,7 @@ class MainWindow(QMainWindow):
             disconnect_action.setEnabled(True)
             remove_action.setEnabled(False)
         peer_item = self.ui.connectionList.currentItem()
-        
+
         if peer_item:
             peer: BPI = peer_item.data(Qt.ItemDataRole.UserRole + 1)
             action = context_menu.exec_(self.ui.connectionList.mapToGlobal(position))
@@ -127,29 +161,45 @@ class MainWindow(QMainWindow):
                 self.communication.close.emit(peer.identifier)
             elif action == remove_action:
                 self.ui.chatWindow.clear()
-                self.ui.connectionList.takeItem(row)               
+                self.ui.connectionList.takeItem(row)
 
     def connectTo(self, ip: str, port: int) -> None:
-        self.reactor.connectTCP(ip, port, self.twistedFactory)
+        self.reactor.connectSSL(
+            ip,
+            port,
+            self.twistedFactory,
+            CertificateOptions(
+                verify= False
+                # trustRoot=trustRootFromCertificates([Certificate(self.ca_cert)]),
+            ),
+        )
 
     def emitSendMsgSignal(self) -> None:
         message = self.ui.messageEdit.text()
         if message:
-            peer: BPI = self.ui.connectionList.currentItem().data(Qt.ItemDataRole.UserRole + 1)
+            peer: BPI = self.ui.connectionList.currentItem().data(
+                Qt.ItemDataRole.UserRole + 1
+            )
             self.communication.sendMsg.emit(peer.identifier, message)
             self.updateMsgHistory(self.ui.connectionList.currentItem(), message)
             self.ui.messageEdit.clear()
-    
+
     def emitSendFileSignal(self) -> None:
         dirStr = self.ui.pathEdit.text()
         if path.exists(dirStr):
-            peer: BPI = self.ui.connectionList.currentItem().data(Qt.ItemDataRole.UserRole + 1)
+            peer: BPI = self.ui.connectionList.currentItem().data(
+                Qt.ItemDataRole.UserRole + 1
+            )
             self.communication.sendFile.emit(peer.identifier, dirStr)
-            self.updateMsgHistory(self.ui.connectionList.currentItem(), "File uploading")
+            self.updateMsgHistory(
+                self.ui.connectionList.currentItem(), "File uploading"
+            )
             self.ui.pathEdit.clear()
 
     def messageReceived(self, identifier: str, message: str):
-        peer_item = self.ui.connectionList.findItems(identifier, Qt.MatchFlag.MatchExactly).pop()
+        peer_item = self.ui.connectionList.findItems(
+            identifier, Qt.MatchFlag.MatchExactly
+        ).pop()
         self.updateMsgHistory(peer_item, message)
 
     def updateMsgHistory(self, peer_item: QListWidgetItem, message: str) -> None:
@@ -158,12 +208,16 @@ class MainWindow(QMainWindow):
         self.updateChatWindow(peer_item)
 
     def connectionLost(self, identifier: str, reason: str) -> None:
-        self.sounds['bubble-pop-up'].play()
-        peer_item = self.ui.connectionList.findItems(identifier, Qt.MatchFlag.MatchExactly).pop()
-        peer_item.setIcon(self.icons['link-slash'])
+        self.sounds["bubble-pop-up"].play()
+        peer_item = self.ui.connectionList.findItems(
+            identifier, Qt.MatchFlag.MatchExactly
+        ).pop()
+        peer_item.setIcon(self.icons["link-slash"])
         self.updateMsgHistory(peer_item, reason)
 
-    def peerTransition(self, currentPeer_item: QListWidgetItem, previousPeer_item: QListWidgetItem) -> None:
+    def peerTransition(
+        self, currentPeer_item: QListWidgetItem, previousPeer_item: QListWidgetItem
+    ) -> None:
         self.updateChatWindow(currentPeer_item)
 
     def setUiElemsActiveness(self, activeness: bool) -> None:
@@ -177,18 +231,25 @@ class MainWindow(QMainWindow):
         elif peer_item and peer_item == self.ui.connectionList.currentItem():
             self.ui.chatWindow.clear()
             self.setUiElemsActiveness(True)
-            self.ui.chatWindow.addItems(peer_item.data(Qt.ItemDataRole.UserRole + 1).history.messages)
-    
+            self.ui.chatWindow.addItems(
+                peer_item.data(Qt.ItemDataRole.UserRole + 1).history.messages
+            )
+
     def insItemToConnList(self, basicPeerInfo: BPI) -> None:
-        self.sounds['long-pop'].play()
+        self.sounds["long-pop"].play()
         connection = QListWidgetItem()
         connection.setText(basicPeerInfo.identifier)
         connection.setData(Qt.ItemDataRole.UserRole + 1, basicPeerInfo)
-        connection.setIcon(self.icons['link'])
+        connection.setIcon(self.icons["link"])
         self.ui.connectionList.addItem(connection)
-        basicPeerInfo.history.messages.append('Connection established!')
+        basicPeerInfo.history.messages.append("Connection established!")
 
     def openFileDiag(self):
-        filePath, _ = QFileDialog.getOpenFileName(self, "Dosya Aç", "", "Tüm Dosyalar (*);;Python Dosyaları (*.py)")
+        filePath, _ = QFileDialog.getOpenFileName(
+            self,
+            f"{self.langUi['open_file'].title()}",
+            "",
+            f"{self.langUi['all'].title()} {self.langUi['files'].title()} (*);",
+        )
         if filePath:
             self.ui.pathEdit.setText(filePath)

@@ -4,21 +4,27 @@
         "options": "options",
         "message": "message",
         "file": "file",
+        "files": "files",
         "pick": "pick",
         "connect_to": "connect to",
         "disconnect": "disconnect",
         "remove": "remove",
-        "upload": "upload"
+        "upload": "upload",
+        "open_file": "open file",
+        "all": "all"
     },
     "tr": {
         "send": "gönder",
         "options": "ayarlar",
         "message": "mesaj",
         "file": "dosya",
+        "files": "dosyalar",
         "pick": "seç",
         "connect_to": "bağlan",
         "disconnect": "bağlantıyı kes",
         "remove": "sil",
-        "upload": "yükle"
+        "upload": "yükle",
+        "open_file": "dosya aç",
+        "all": "bütün"
     }
 }

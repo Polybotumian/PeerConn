@@ -1,6 +1,7 @@
 from twisted.internet import protocol
 from protocols import P2PProtocol
 
+
 class P2PFactory(protocol.ClientFactory):
     def __init__(self, communication, peerInfo, logger):
         self.communication = communication

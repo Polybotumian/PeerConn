@@ -1,34 +1,32 @@
 from twisted.internet import protocol
 from twisted.internet.interfaces import ITransport
+from twisted.internet.error import ConnectionDone, ConnectionLost
 from customSignals import Communication, PeerInfo
 from dmodels import BPI, CHD
 from uuid import uuid4
 from logging import Logger
-from os import urandom
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
-from twisted.internet.error import ConnectionDone, ConnectionLost
+
 
 class P2PProtocol(protocol.Protocol):
-    transport: ITransport
 
-    def __init__(self, communication, peerInfo, logger):
+    def __init__(
+        self, communication: Communication, peerInfo: PeerInfo, logger: Logger
+    ):
         self.identifier = str(uuid4())
-        self.communication: Communication = communication
+        self.transport: ITransport
+        self.communication = communication
         self.communication.sendMsg.connect(self.sendMessage)
         self.communication.sendFile.connect(self.sendFile)
         self.communication.close.connect(self.closeConnection)
-        self.peerInfo: PeerInfo = peerInfo
-        self.logger: Logger = logger
-        self.key = urandom(32)  # AES için 256-bit anahtar
-        self.iv = urandom(16)   # AES için 128-bit IV
-        self.cipher = Cipher(algorithms.AES(self.key), modes.CFB(self.iv), backend=default_backend())
+        self.peerInfo = peerInfo
+        self.logger = logger
 
-    def connectionMade(self):
-        self.logger.info(f'Connection established: {self.identifier}')
+    def connectionMade(self) -> None:
+        print(self.transport.getHost(), self.transport.getPeer())
+        self.logger.info(f"Connection established: {self.identifier}")
         self.authenticatePeer()
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason) -> None:
         if reason.check(ConnectionDone):
             reason_msg = "Connection closed cleanly."
         elif reason.check(ConnectionLost):
@@ -37,68 +35,49 @@ class P2PProtocol(protocol.Protocol):
             reason_msg = reason.getErrorMessage()  # Default message
         self.basicPeerInfo.flags = 0
         self.communication.lost.emit(self.identifier, reason_msg)
-        self.logger.info(f'Connection lost: {self.identifier}, {reason_msg}')
+        self.logger.info(f"Connection lost: {self.identifier}, {reason_msg}")
 
-    def abortConnection(self):
-        self.logger.info(f'Connection Aborted: {self.identifier}')
-    
-    def closeConnection(self, identifier):
+    def abortConnection(self) -> None:
+        self.logger.info(f"Connection Aborted: {self.identifier}")
+
+    def closeConnection(self, identifier) -> None:
         if self.identifier == identifier:
             self.transport.loseConnection()
-            self.logger.info(f'Disconnected: {self.identifier}')
+            self.logger.info(f"Disconnected: {self.identifier}")
 
-    def dataReceived(self, data):
+    def dataReceived(self, data) -> None:
         if data.startswith(b"msg:"):
             self.handleMessage(data[4:])
         elif data.startswith(b"file:"):
             self.handleFile(data[5:])
         else:
-            self.logger.error(f'Unidentified data type')
+            self.logger.error(f"Unidentified data type")
 
-    def sendMessage(self, identifier, message: str):
+    def sendMessage(self, identifier, message: str) -> None:
         if message and self.identifier == identifier:
-            # encoded_message = message.encode('utf-8')
-            # self.transport.write(self.encryptData(encoded_message))
-            message = 'msg:' + message
-            self.transport.write(message.encode('utf-8'))
+            message = "msg:" + message
+            self.transport.write(message.encode("utf-8"))
 
-    def sendFile(self, identifier, file_path):
+    def sendFile(self, identifier, file_path) -> None:
         if file_path and self.identifier == identifier:
-            self.transport.write(b'file:')
+            self.transport.write(b"file:")
             with open(file_path, "rb") as file:
                 while True:
                     chunk = file.read(1024)
                     if not chunk:
                         break
-                    encrypted_chunk = self.encryptData(chunk)
-                    self.transport.write(encrypted_chunk)
+                    self.transport.write(chunk)
 
-    def handleMessage(self, message):
-        # decrypted_message = self.decryptData(message)
-        # self.communication.received.emit(self.identifier, decrypted_message.decode('utf-8'))
-        self.communication.received.emit(self.identifier, message.decode('utf-8'))
+    def handleMessage(self, message) -> None:
+        self.communication.received.emit(self.identifier, message.decode("utf-8"))
 
-    def handleFile(self, file_data):
+    def handleFile(self, file_data) -> None:
         print(f"Dosya alındı: {len(file_data)} bytes")
 
-    def authenticatePeer(self):
-        self.basicPeerInfo = BPI(
-            identifier= self.identifier,
-            history= CHD(),
-            flags= 1
-        )
+    def authenticatePeer(self) -> None:
+        self.basicPeerInfo = BPI(identifier=self.identifier, history=CHD(), flags=1)
         self.peerInfo.descriptive.emit(self.basicPeerInfo)
-        self.logger.info(f'Authenticating: {self.identifier}')
+        self.logger.info(f"Authenticating: {self.identifier}")
 
-    def handleError(self, error):
-        self.logger.error(f'An error occured: {self.identifier}, {error}')
-
-    def encryptData(self, data):
-        encryptor = self.cipher.encryptor()
-        encrypted_data = encryptor.update(data) + encryptor.finalize()
-        return encrypted_data
-
-    def decryptData(self, data):
-        decryptor = self.cipher.decryptor()
-        decrypted_data = decryptor.update(data) + decryptor.finalize()
-        return decrypted_data
+    def handleError(self, error) -> None:
+        self.logger.error(f"An error occured: {self.identifier}, {error}")
