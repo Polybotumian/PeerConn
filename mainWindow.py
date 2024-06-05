@@ -1,22 +1,18 @@
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem, QMenu, QFileDialog, QAction
 from desktopUI import Ui_MainWindow
-from customSignals import Communication, PeerInfo
+from signals import Communication, PeerInfo
 from dmodels import BPI, CHD
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QIcon
 from logging import Logger
 from os import path, listdir
-from customDiags import ConnectionDialog
+from diags import ConnectionDialog
 from json import load
 from PyQt5.QtMultimedia import QSoundEffect
 from factories import P2PFactory
 from typing import Any
 from OpenSSL.crypto import X509, PKey
-from twisted.internet.ssl import (
-    Certificate,
-    CertificateOptions,
-    trustRootFromCertificates,
-)
+from twisted.internet.ssl import CertificateOptions
 
 
 class MainWindow(QMainWindow):
@@ -169,7 +165,7 @@ class MainWindow(QMainWindow):
             port,
             self.twistedFactory,
             CertificateOptions(
-                verify= False
+                verify=False
                 # trustRoot=trustRootFromCertificates([Certificate(self.ca_cert)]),
             ),
         )

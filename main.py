@@ -6,7 +6,7 @@ from factories import P2PFactory
 import qt5reactor
 from json import load
 import logging
-from inMemCert import genCrtAndKey, generateCa
+from tlsCert import genCrtAndKey, generateCa
 
 
 def main():
@@ -18,7 +18,6 @@ def main():
             break
 
     if path.exists(configDir):
-
         with open(configDir, "r") as file:
             config = load(file)
 
@@ -55,10 +54,12 @@ def main():
         )
         window.logger.info("Factory initialized")
         window.ca_key, window.ca_cert = generateCa()
+        window.cert_options = genCrtAndKey(window.ca_key, window.ca_cert)
+
         reactor.listenSSL(
             config["factory"]["port"],
             window.twistedFactory,
-            genCrtAndKey(window.ca_key, window.ca_cert),
+            window.cert_options,
         )
         window.logger.info(f'Reactor listens: {config["factory"]["port"]}')
         reactor.runReturn(installSignalHandlers=False)
