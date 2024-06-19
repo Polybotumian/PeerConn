@@ -11,7 +11,9 @@
         "remove": "remove",
         "upload": "upload",
         "open_file": "open file",
-        "all": "all"
+        "all": "all",
+        "info": "info",
+        "security": "security"
     },
     "tr": {
         "send": "gönder",
@@ -25,6 +27,8 @@
         "remove": "sil",
         "upload": "yükle",
         "open_file": "dosya aç",
-        "all": "bütün"
+        "all": "bütün",
+        "info": "bilgi",
+        "security": "güvenlik"
     }
 }

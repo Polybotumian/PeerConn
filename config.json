@@ -1,29 +1,18 @@
 {
-    "locale": {
-        "foldername": "locale",
-        "lang": {
-            "filename": "lang.json",
-            "cur": "tr"
-        }
-    },
-    "assets": {
-        "foldername": "assets",
-        "icons": {
-            "foldername": "icons"
-        },
-        "sounds": {
-            "foldername": "sounds"
-        }
-    },
-    "logger": {
-        "filename": "last.log",
-        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        "mode": "w"
-    },
-    "factory": {
-        "port": 45152
-    },
-    "downloads": {
-        "dir": "./"
-    }
+  "port": 45152,
+  "logger": {
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "mode": "w"
+  },
+  "locale": {
+    "path": "./assets/lang.json",
+    "selected": "tr"
+  },
+  "paths": {
+    "icons": "assets/icons",
+    "sounds": "assets/sounds",
+    "received": "received_files"
+  },
+  "security": "ssl/tls",
+  "usestun": false
 }

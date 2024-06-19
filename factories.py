@@ -1,12 +1,11 @@
 from twisted.internet import protocol
-from p2p import Protocol
+import protocols
 
 
-class P2PFactory(protocol.ClientFactory):
-    def __init__(self, communication, peerInfo, logger):
+class P2P(protocol.ClientFactory):
+    def __init__(self, communication, logger):
         self.communication = communication
-        self.peerInfo = peerInfo
         self.logger = logger
 
     def buildProtocol(self, addr):
-        return Protocol(self.communication, self.peerInfo, self.logger)
+        return protocols.P2P(self.communication, self.logger)

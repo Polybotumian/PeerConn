@@ -1,12 +1,13 @@
 from PyQt5.QtCore import pyqtSignal, QObject
-from dmodels import BPI
+from data_models import BPI
+
 
 class Communication(QObject):
-    received = pyqtSignal(str, str)
-    sendMsg = pyqtSignal(str, str)
-    sendFile = pyqtSignal(str, str)
-    close = pyqtSignal(str)
-    lost = pyqtSignal(str, str)
-
-class PeerInfo(QObject):
-    descriptive = pyqtSignal(BPI)
+    received_msg = pyqtSignal(str, str)
+    msg_send = pyqtSignal(str, str)
+    file_send = pyqtSignal(str, str)
+    conn_close = pyqtSignal(str)
+    conn_lost = pyqtSignal(str, str)
+    peer_info = pyqtSignal(BPI)
+    file_percentage = pyqtSignal(str, int)
+    notification = pyqtSignal(str, str)
